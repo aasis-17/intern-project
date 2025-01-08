@@ -20,10 +20,13 @@ const deleteMultipleFileFromServer = async(localFilePath) => {
     await Promise.all(files)
 }
 
-export const uploadFileOnCloudinary = async (localFilePath) => {
+export const uploadFileOnCloudinary = async (localFilePath, type, folder) => {
     try {
         if(!localFilePath) throw error("Invalid local path!!")
-        const response = await cloudinary.uploader.upload(localFilePath)
+        const response = await cloudinary.uploader.upload(localFilePath,{
+                    resource_type : type,
+                    asset_folder : `trekersHub/${folder}`
+                })
         console.log("File uploaded to cloudinary successfully!!")
         fs.unlinkSync(localFilePath)
         return response
@@ -33,13 +36,14 @@ export const uploadFileOnCloudinary = async (localFilePath) => {
     }
 }
 
-export const uploadMultipleFileOnCloudinary = async(localFilePath, type) => {
+export const uploadMultipleFileOnCloudinary = async(localFilePath, type, folder) => {
     try {
         const limit = pLimit(10)
         const imagesToUpload = localFilePath.map((filePath) => {
             return limit(async () => {
                 const response = await cloudinary.uploader.upload(filePath,{
-                    resource_type : type
+                    resource_type : type,
+                    asset_folder : `trekersHub/${folder}`,
                 })
                 return response
             })
@@ -58,7 +62,7 @@ export const uploadMultipleFileOnCloudinary = async(localFilePath, type) => {
 export const removeFileFromCloudinary = async (publicId, type) => {
     try {
         if(publicId && typeof(publicId) === "string"){
-            const response = await cloudinary.destroy(publicId,{
+            const response = await cloudinary.uploader.destroy(publicId,{
                 resource_type : type
             })
             console.log("File removed from cloudinary successfully!!")
@@ -73,5 +77,6 @@ export const removeFileFromCloudinary = async (publicId, type) => {
         }
     } catch (error) {
         console.log("error while removing file from cloudinary!!", error)
+        throw error
     }
 }
