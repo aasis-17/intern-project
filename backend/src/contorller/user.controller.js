@@ -2,78 +2,7 @@ import { User } from "../model/role.model/user.model.js";
 import fs from "fs"
 import { ApiError, asyncHandler, ApiResponse } from "../utils/index.js";
 import { removeFileFromCloudinary, uploadFileOnCloudinary } from "../utils/fileHandler.js";
-
-
-export const signup = asyncHandler(async (req, res) => {
-
-    const {fullname, username, email, password, gender, role} = req.body
-
-    if([fullname, username, email, password, gender].some(field => field?.trim() === "")){
-        throw new ApiError(400, "All fields are required!!")
-    }
-
-    const existingUser = await User.findOne({email})
-
-    if(existingUser) throw new ApiError(400, "User already exists!!")
-    
-    const user = await User.create({
-        fullname,
-        username,
-        email,
-        password,
-        gender,
-        role
-    })
-
-    if(!user) throw new ApiError(500, "Error while creating user in DB!!")
-
-    return res.status(201).json(new ApiResponse(200, user, "User created successfully!!"))
-
-})
-
-export const login = asyncHandler( async (req, res) => {
-
-    const {email, password} = req.body
-
-    if(!email || !password) throw new ApiError(400, "Email or password missing!!")
-    
-    const userExists = await User.findOne({email})
-
-    if(!userExists) throw new ApiError(400, "User doesnot exists!!")
-
-    const isPasswordCorrect =  await userExists.verifyPassword(password)
-
-    if(!isPasswordCorrect) throw new ApiError(400, "Invalid password!!")
-
-    const accessToken = await userExists.generateAccessToken()
-
-    if(!accessToken) throw new ApiError(500, "Error while creating token!!")
-
-    const options = {
-        httpOnly : true,
-        secure : true,
-        sameSite : "none"
-    }
-
-    return res.status(200)
-    .cookie("accessToken", accessToken, options)
-    .json(new ApiResponse(200, {accessToken}, "User login Successfully!!"))
-})
-
-export const logout = asyncHandler(async (req, res) => {
-    
-    const options = {
-        httpOnly : true,
-        sameSite : "none",
-        secure : true
-    }
-
-    req.user = null
-    
-    return res.status(200)
-    .clearCookie("accessToken", options)
-    .json(new ApiResponse(200, {}, "User logged out Successfully!!"))
-})
+import { isValidObjectId } from "mongoose";
 
 export const updateUserInfo = asyncHandler(async (req, res) => {
 
@@ -99,9 +28,9 @@ export const updateUserInfo = asyncHandler(async (req, res) => {
 export const updateUserAvatar = asyncHandler(async (req, res) => {
 
     const localFilePath = req.file?.path
-    console.log(localFilePath)
 
     if(!localFilePath) throw new ApiError(400, "File missing!!")
+
     try {
         req.user.userAvatarPublicId && await removeFileFromCloudinary(req.user.userAvatarPublicId, "image")
     } catch (error) {
@@ -126,22 +55,17 @@ export const updateUserAvatar = asyncHandler(async (req, res) => {
 
 })
 
-export const updatePassword = asyncHandler(async(req, res) => {
+export const getCurrentUser = asyncHandler(async(req, res) => {
 
-    const {oldPassword, newPassword} = req.body
+    const {userId} = req.params
 
-    if(!oldPassword || !newPassword) throw new ApiError(400, "password missing!!")
+    if(!isValidObjectId(userId)) throw new ApiError(400, "Invalid userId!!")
 
-    const user = await User.findById(req.user._id)
+    const user = await User.findById(userId).select("-password ")
 
-    const isPasswordCorrect = await user.verifyPassword(oldPassword)
+    if(!user) throw new ApiError(404, "User not found!!")
 
-    if(!isPasswordCorrect) throw new ApiError(400, "Invalid password!!")
-
-    user.password = newPassword
-    await user.save({validateBeforeSave : false})
-
-    return res.status(200).json(new ApiResponse(200, {}, "Password updated successfully!!"))
+    return res.status(200).json(new ApiResponse(200, user, "User fetched successfully!!"))
 })
 
 export const deactivateUser = asyncHandler(async(req,res) => {})

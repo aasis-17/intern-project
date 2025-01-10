@@ -15,7 +15,10 @@ app.use(cors({
 app.use(cookieParser())
 
 //router
-import { userRouter } from "./routes/index.js"
+import { userRouter, authRouter, guideRouter } from "./routes/index.js"
+
+app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/user", userRouter)
+app.use("/api/v1/guide", guideRouter)
 
 export default app
