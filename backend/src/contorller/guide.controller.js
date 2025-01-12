@@ -75,11 +75,11 @@ export const updateGuideInfo = asyncHandler(async(req, res) => {
 
 export const addGuideImages = asyncHandler( async(req, res) => {
 
-    const guideId = req.params.guideId
+    const {guideId} = req.params
+
     if(!isValidObjectId(guideId)) throw new ApiError(400, "Invalid guideId!!")
     
     const localFilePath = req.files?.map(file => file.path)
-    console.log(localFilePath)
 
     if(!localFilePath) throw new ApiError(400, "File missing!!")
 
@@ -87,7 +87,7 @@ export const addGuideImages = asyncHandler( async(req, res) => {
 
     if(!guide) throw new ApiError(500, "Guide doesnot exists!!")
 
-    if(guide.guideImage.length > 5) throw new ApiError(400, "Upload limit crossed!!")
+    if(guide.guideImage.length > 6) throw new ApiError(400, "Upload limit crossed i.e 5!!")
     
     const uploadImage = await uploadMultipleFileOnCloudinary(localFilePath, "image", "guideImage")
 
