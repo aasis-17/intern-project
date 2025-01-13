@@ -5,10 +5,10 @@ const destinationSchema = new mongoose.Schema(
         destinationName : {
             type : String,
             required : true,
-            unique : true
+            unique : true,
         },
         destinationInfo : {
-            type : true,
+            type : String,
             required : true
         },
         destinationCoverImage : {
@@ -29,9 +29,15 @@ const destinationSchema = new mongoose.Schema(
                 type : String
             }
         ],
-        destinationMapCodinates : {
-            type : String,
-            required : true
+        destinationMapCoordinates : {
+            longitude :{
+                type : Number,
+                required : true
+            },
+            latitude : {
+                type : Number,
+                required : true
+            }
         },
         routePlan :[
             {
@@ -43,9 +49,15 @@ const destinationSchema = new mongoose.Schema(
                     type : String,
                     required : true
                 },
-                routeMapCodinates : {
-                    type : String,
-                    required : true
+                routeMapCoordinates : {
+                    longitude :{
+                        type : Number,
+                        required : true
+                    },
+                    latitude : {
+                        type : Number,
+                        required : true
+                    }
                 }
             }
         ],
@@ -57,7 +69,7 @@ const destinationSchema = new mongoose.Schema(
             ref : "Review"
         }]
         
-    }
+    },{timestamps : true}
 )
 
 export const Destination = mongoose.model("Destination", destinationSchema)
