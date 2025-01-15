@@ -7,8 +7,6 @@ import { isValidObjectId } from "mongoose";
 
 export const updateRoleToGuide = asyncHandler(async(req, res) => {
 
-    if(req.user.role !== "user") throw new ApiError(400, "You are not quilified!!")
-
     const { guideInfo, destination} = req.body
 
     if([ guideInfo, destination].some(field => field?.trim() === "")){
@@ -26,17 +24,14 @@ export const updateRoleToGuide = asyncHandler(async(req, res) => {
 
     const uploadedImages = await uploadMultipleFileOnCloudinary(localFilePath, "image", "guideImage")
 
-    if(uploadedImages.length < 0) throw new ApiError(500, "Server errror while uploading!!")
-    
-    const imagesUrl = uploadedImages.map(image => image.url)
-    const imagesPublicIds = uploadedImages.map(image => image.public_id)
+    if(!uploadedImages) throw new ApiError(500, "Server errror while uploading!!") 
 
     const createGuide = await Guide.create({
         userId : existingUser._id,
         guideInfo,
         destination,
-        guideImage : imagesUrl || [],
-        guideImagePublicId : imagesPublicIds || [],
+        guideImage : uploadedImages?.map(image => image.url) || [],
+        guideImagePublicId : uploadedImages?.map(image => image.public_id) || [],
     })
 
     if(!createGuide) throw new ApiError(500, "Server error!!")
@@ -113,9 +108,9 @@ export const removeGuideImage = asyncHandler( async(req, res) => {
     const {guideImagePublicId, guideImage} = req.body
     console.log(req.body)
 
-    if(!guideImagePublicId < 0 || !guideImage < 0) throw new ApiError(400, "Images mssing to remove!!")
+    if(!guideImagePublicId[0] || !guideImage[0]) throw new ApiError(400, "Images missing to remove!!")
     
-    const removeImage = await removeFileFromCloudinary(guideImagePublicId)
+    const removeImage = await removeFileFromCloudinary(guideImagePublicId, "image")
 
     if(!removeImage) throw new ApiError(500, "Error while removing images!!")
 

@@ -7,18 +7,19 @@ import { isValidObjectId } from "mongoose";
 export const createDestination = asyncHandler( async(req, res) => {
 
     const {destinationName, destinationInfo, destinationMapCoordinates, routePlan, destinationTips} = req.body
-
-    if(!destinationInfo || !destinationTips || !destinationName || destinationMapCoordinates.some(field => field?.trim() === "") || routePlan.some(field => field?.trim() === "")){
+    console.log(destinationInfo,destinationName, destinationTips)
+    if(!destinationInfo || !destinationTips || !destinationName ||!destinationMapCoordinates.longitude || !destinationMapCoordinates.latitude || !routePlan[0]){
         throw new ApiError(400, "Filed missing!!")
     }
 
-    const localFileCoverPath = req.file?.destinationCoverImage.path
+    const localFileCoverPath = req.files.destinationCoverImage[0]?.path
+    console.log(localFileCoverPath)
 
     if(!localFileCoverPath) throw new ApiError(400, "cover image is missing!!")
     
     const uploadCoverImage = await uploadFileOnCloudinary(localFileCoverPath, "image", `destinationImage/${destinationName}`)
 
-    const localFilePath = req.files?.map(file => file.path)
+    const localFilePath = req.files.destinationImages?.map(file => file.path) || []
 
     let uploadImage;
     if(localFilePath.length > 0){
@@ -30,8 +31,9 @@ export const createDestination = asyncHandler( async(req, res) => {
         destinationInfo,
         destinationCoverImage : uploadCoverImage.url,
         destinationCoverImagePublicId : uploadCoverImage.public_id,
-        destinationImages : uploadImage.map(image => image.url) || [],
-        destinationImagesPublicId : uploadImage.map(image => image.public_id) || [],
+        destinationImages : uploadImage?.map(image => image.url) || [],
+        destinationImagesPublicId : uploadImage?.map(image => image.public_id) || [],
+        destinationMapCoordinates,
         destinationTips,
         routePlan
     })
@@ -49,8 +51,8 @@ export const updateDestination = asyncHandler( async (req, res) => {
 
     const {destinationName, destinationInfo, destinationTips,destinationMapCoordinates, routePlan} = req.body
 
-    if(!destinationInfo || !destinationTips || !destinationName || destinationMapCoordinates.some(field => field?.trim() === "") || routePlan.some(field => field?.trim() === "")){
-        throw new ApiError(400, "Filed missing!!")
+    if(!destinationInfo || !destinationTips || !destinationName || !destinationMapCoordinates.longitude || !destinationMapCoordinates.latitude || !routePlan || !routePlan[0]){
+        throw new ApiError(400, "Field missing!!")
     }
 
     const destination = await Destination.findByIdAndUpdate(destinationId, {
@@ -61,7 +63,7 @@ export const updateDestination = asyncHandler( async (req, res) => {
             destinationTips,
             routePlan
         }
-    })
+    },{ new : true})
 
     if(!destination) throw new ApiError(500, "Server errro while updating destination!!")
 
@@ -108,9 +110,13 @@ export const addDestinationImage = asyncHandler( async(req, res) => {
     
     const destination = await Destination.findById(destinationId)
 
+    if(!destination) throw new ApiError(500, "Destination doesnot exists!!")
+
+    if(destination.destinationImages.length > 6) throw new ApiError(400, "upload limit exceeded!!")
+
     const localFilePath = req.files?.map(file => file.path)
 
-    if(localFilePath.length < 0) throw new ApiError(400, "Image missing!!")
+    if(!localFilePath[0]) throw new ApiError(400, "Image missing!!")
 
     const upload = await uploadMultipleFileOnCloudinary(localFilePath, "image", `destinationImage/${destination.destinationName}`)
 
@@ -125,7 +131,7 @@ export const addDestinationImage = asyncHandler( async(req, res) => {
                 $each : upload.map(image => image.public_id)
             }          
         }
-    })
+    },{ new : true})
 
     if(!addImage) throw new ApiError(500, "Server error while updating images!!")
 
@@ -140,7 +146,7 @@ export const deleteDestinationImage = asyncHandler( async(req, res) => {
     
     const {destinationImages, destinationImagesPublicId} = req.body
 
-    if(destinationImages.length < 0 || destinationImagesPublicId.length < 0) throw new ApiError(400, "Image missing!!")
+    if(!destinationImages[0] || !destinationImagesPublicId[0]) throw new ApiError(400, "Image missing!!")
 
     const removeImage = await removeFileFromCloudinary(destinationImagesPublicId, "image")
 
@@ -188,7 +194,7 @@ export const deleteDestination = asyncHandler(async(req, res) =>{
     if(!deleteDestination) throw new ApiError(500, "Error while deleting document!!")
 
     await removeFileFromCloudinary(deleteDestination.destinationCoverImagePublicId, "image")
-    await removeFileFromCloudinary(deleteDestination.destinationImagesPublicId)
+    await removeFileFromCloudinary(deleteDestination.destinationImagesPublicId, "image")
 
     return res.status(200).json(new ApiResponse(200, deleteDestination, "Destination deleted successfully!!"))
 })

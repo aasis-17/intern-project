@@ -2,13 +2,17 @@ import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema(
     {
-        userId : {
+        createdBy : {
             type : mongoose.Schema.Types.ObjectId,
             ref : "User"
         },
-        comment : {
+        reviewMessage : {
             type : String,
         },
+        comments : [{
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "Comment"
+        }],
         rating : {
             type : Number,
             enum : [0, 1, 2, 3, 4, 5],

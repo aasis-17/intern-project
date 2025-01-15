@@ -18,6 +18,16 @@ const serviceOwnerSchema = new mongoose.Schema(
             type : String,
             required : true
         },
+        serviceLocationMapCoordinates : {
+            longitude :{
+                type : Number,
+                required : true
+            },
+            latitude : {
+                type : Number,
+                required : true
+            }
+        },
         serviceImages : [{
             type : String
         }],

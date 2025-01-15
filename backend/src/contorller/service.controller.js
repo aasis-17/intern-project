@@ -7,16 +7,14 @@ import { User } from "../model/role.model/user.model.js";
 
 export const upgradeToService = asyncHandler( async(req, res) => {
 
-    if(req.user.role !== "user") throw new ApiError(400, `You are already + ${req.user.role}!!`)
+    const {serviceName, serviceInfo, serviceDestination, serviceLocationMapCoordinates} = req.body
 
-    const {serviceName, serviceInfo, serviceDestination} = req.body
+    if(!serviceInfo || !serviceName || !serviceDestination || !serviceLocationMapCoordinates.longitude || !serviceLocationMapCoordinates.latitude) throw new ApiError(400, "Field missing!!")
 
-    if(!serviceInfo || !serviceName || !serviceDestination) throw new ApiError(400, "Field missing!!")
-
-    const localFilePath = req.files?.map(file => file.path) 
+    const localFilePath = req.files?.map(file => file.path) || []
 
     let uploadImage;
-    if(localFilePath.length > 0){
+    if(localFilePath[0]){
         uploadImage = await uploadMultipleFileOnCloudinary(localFilePath, "image", "serviceImage")
     }
  
@@ -25,6 +23,7 @@ export const upgradeToService = asyncHandler( async(req, res) => {
         serviceName,
         serviceInfo,
         serviceDestination,
+        serviceLocationMapCoordinates,
         serviceImages : uploadImage?.map(image => image.url) || [],
         serviceImagePublicId : uploadImage?.map(image => image.public_id || [])
     })
@@ -48,15 +47,16 @@ export const updateServiceInfo = asyncHandler( async(req, res) => {
 
     if(!isValidObjectId(serviceId)) throw new ApiError(400, "Invalid service id!!")
     
-    const {serviceName, serviceInfo, serviceDestination} = req.body
+    const {serviceName, serviceInfo, serviceDestination, serviceLocationMapCoordinates} = req.body
 
-    if(!serviceName || !serviceDestination || !serviceInfo) throw new ApiError(400, "Fields missing!!")
+    if(!serviceName || !serviceDestination || !serviceInfo || !serviceLocationMapCoordinates.longitude || !serviceLocationMapCoordinates.latitude) throw new ApiError(400, "Fields missing!!")
 
     const serviceOwner = await ServiceOwner.findByIdAndUpdate(serviceId, {
         $set : {
             serviceName,
             serviceInfo,
-            serviceDestination
+            serviceDestination,
+            serviceLocationMapCoordinates
         }
     },{ new : true })
 
@@ -73,7 +73,7 @@ export const addServiceImages = asyncHandler(async(req, res) => {
 
     const localFilePath = req.files?.map(file => file.path)
 
-    if (!localFilePath.length < 0) throw new ApiError(400, "file missing!!")
+    if (!localFilePath.length[0]) throw new ApiError(400, "file missing!!")
     
     const serviceOwner = await ServiceOwner.findById(serviceId)
 
@@ -115,7 +115,7 @@ export const removeServiceImage = asyncHandler( async( req, res) => {
 
     const {serviceImages, serviceImagePublicId} = req.body
 
-    if(serviceImages.length < 0 || serviceImagePublicId < 0) throw new ApiError(400, "Image not selected!!")
+    if(!serviceImages[0] || !serviceImagePublicId[0]) throw new ApiError(400, "Image not selected!!")
     
     const removeImages = await removeFileFromCloudinary(serviceImagePublicId, "image")
 
