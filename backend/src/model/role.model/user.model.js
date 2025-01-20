@@ -52,8 +52,13 @@ const userSchema = new mongoose.Schema(
         },
         refreshToken : {
             type : String
+        },
+        is_onLine : {
+            type : String,
+            enum : ["true", "false"],
+            default : "false"
         }
-    }
+    },{ timestamps : true }
 )
 
 // this middleware  hash password before saving it to Db

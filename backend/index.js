@@ -1,20 +1,17 @@
-import app from "./src/app.js";
+import {server} from "./src/socket/socket.js"
 import dotenv from "dotenv"
 import { connectDb } from "./src/dbConnection/index.js";
-import {createServer} from "http"
-import { Server } from "socket.io";
+
+
 
 dotenv.config(
     {
         path :"./.env"
 })
 
-const server = createServer(app)
-
-const io = new Server(server)
-
 const PORT = process.env.PORT || 7000
 const URL = process.env.MONGODB_URL
+
 
 connectDb(URL)
 .then( () => {
