@@ -1,21 +1,20 @@
 import React from 'react'
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 const Header = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
+
+  const navigate = useNavigate()
 
   const toggleNav = () => {
     setIsNavOpen((prev) => !prev);
   };
 
   return (
-    <header className="border-b bg-white shadow-md">
+    <header className="border-b bg-red-100 shadow-md font-garamond">
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
-        {/* Logo */}
-        <div className="text-2xl font-bold text-gray-800">
-          <Link to="/">ModernLogo</Link>
-        </div>
+
 
         {/* Hamburger Menu (Mobile) */}
         <button
@@ -67,12 +66,17 @@ const Header = () => {
           </ul>
         </nav>
 
+                {/* Logo */}
+        <div className="text-2xl font-bold text-gray-800 font-garamond">
+          <Link to="/">TREKERS HUB</Link>
+        </div>
+
         {/* Buttons */}
         <div className="hidden lg:flex space-x-4">
           <button className="px-4 py-2 rounded border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition">
             Login
           </button>
-          <button className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition">
+          <button onClick={() => navigate("signup/user") } className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition">
             Sign Up
           </button>
         </div>
