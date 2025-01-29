@@ -57,11 +57,11 @@ export const updateUserAvatar = asyncHandler(async (req, res) => {
 
 export const getCurrentUser = asyncHandler(async(req, res) => {
 
-    const {userId} = req.params
+    const {_id} = req.user
 
-    if(!isValidObjectId(userId)) throw new ApiError(400, "Invalid userId!!")
+    if(!isValidObjectId(_id)) throw new ApiError(400, "Invalid userId!!")
 
-    const user = await User.findById(userId).select("-password ")
+    const user = await User.findById(_id).select("-password ")
 
     if(!user) throw new ApiError(404, "User not found!!")
 

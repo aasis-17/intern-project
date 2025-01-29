@@ -9,38 +9,39 @@ export const createReview = asyncHandler( async(req, res) => {
 
     const objectId = req.query
 
-    const {rating, reviewMessage} = req.body
+    const {rating, comment} = req.body
+    console.log(rating, comment)
 
-    if(!rating || !reviewMessage) throw new ApiError(400, "Field missing!!")
+    if(!rating || !comment) throw new ApiError(400, "Field missing!!")
 
-    const review = await Review.create({
-        createdBy : req.user._id,
-        reviewMessage,
+    const createdReview = await Review.create({
+        creator : req.user._id,
+        reviewMessage : comment,
         rating,
         ...objectId
     })
 
-    if(!review) throw new ApiError(500, "Server error while creating review!!")
+    if(!createdReview) throw new ApiError(500, "Server error while creating review!!")
 
     let addReview;
     if(Object.keys(objectId)[0] === "destinationId"){
          addReview = await Destination.findByIdAndUpdate(objectId.destinationId,{
             $push : {
-                destinationReview : review._id
+                destinationReview : createdReview._id
             }
         },{new : true})
     }
     if(Object.keys(objectId)[0] === "guideId"){
          addReview = await Guide.findByIdAndUpdate(objectId.destinationId,{
             $push : {
-                guideReview : review._id
+                guideReview : createdReview._id
             }
         },{new : true})
     }
     if(Object.keys(objectId)[0] === "serviceId"){
          addReview = await ServiceOwner.findByIdAndUpdate(objectId.serviceId,{
             $push : {
-                serviceReview : review._id
+                serviceReview : createdReview._id
             }
             
         },{new : true})
@@ -48,7 +49,7 @@ export const createReview = asyncHandler( async(req, res) => {
     }
      if(!addReview) throw new ApiError(500, "Server error while adding review!!")
     
-    return res.status(201).json( new ApiResponse(200, {review, addReview}, "Review created successfully!!"))
+    return res.status(201).json( new ApiResponse(200, {createdReview}, "Review created successfully!!"))
 })
 
 export const updateReview = asyncHandler(async(req, res) => {

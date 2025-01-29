@@ -6,9 +6,11 @@ import { isValidObjectId } from "mongoose";
 
 export const createDestination = asyncHandler( async(req, res) => {
 
-    const {destinationName, destinationInfo, destinationMapCoordinates, routePlan, destinationTips} = req.body
+    const {destinationName, destinationInfo, destinationMapCoordinates={longitude:"12", latitude:"123"}, routePlan,destinationRegion, destinationTips} = req.body
     console.log(destinationInfo,destinationName, destinationTips)
-    if(!destinationInfo || !destinationTips || !destinationName ||!destinationMapCoordinates.longitude || !destinationMapCoordinates.latitude || !routePlan[0]){
+    if(!destinationInfo || !destinationTips || !destinationName ||!destinationMapCoordinates.longitude || !destinationMapCoordinates.latitude || !destinationRegion
+        // || !routePlan[0]
+    ){
         throw new ApiError(400, "Filed missing!!")
     }
 
@@ -29,13 +31,14 @@ export const createDestination = asyncHandler( async(req, res) => {
     const destination = await Destination.create({
         destinationName,
         destinationInfo,
+        destinationRegion,
         destinationCoverImage : uploadCoverImage.url,
         destinationCoverImagePublicId : uploadCoverImage.public_id,
         destinationImages : uploadImage?.map(image => image.url) || [],
         destinationImagesPublicId : uploadImage?.map(image => image.public_id) || [],
-        destinationMapCoordinates,
+        // destinationMapCoordinates,
         destinationTips,
-        routePlan
+        // routePlan
     })
 
     if(!destination) throw new ApiError(500, "Server error while creating destination!!")
@@ -198,3 +201,67 @@ export const deleteDestination = asyncHandler(async(req, res) =>{
 
     return res.status(200).json(new ApiResponse(200, deleteDestination, "Destination deleted successfully!!"))
 })
+
+export const getAllDestination = asyncHandler(async(req, res) => {
+
+    const { page, limit=10, search, region, sortType="dec" } = req.query
+
+    const filter ={}
+    const sort ={}
+    const pageNo = parseInt(page)
+    const limitNo = parseInt(limit)
+    const skip = (pageNo - 1) * limitNo; //NOTE : skip no of videos 
+
+    if(search) filter.destinationName = {$regex : search, $options : "i"}
+    if(region) filter.destinationRegion = {$regex : region, $options : "i"}
+    if(sortType) sort.avgReview = sortType === "asc" ? 1 : -1
+
+    console.log(filter)
+    console.log(page)
+
+    // const destinations = await Destination.find()
+
+    const destinations = await Destination.aggregate([{
+
+        $match : filter
+    },
+    {
+        $lookup :{
+            from : 'reviews',
+            localField : "destinationReview",
+            foreignField : "_id",
+            as : "destinationReview",
+        }
+    },
+    {
+        $addFields : {
+            avgReview : {
+                $avg : "$destinationReview.rating"
+            }
+        }
+    },
+    {
+        $sort : sort
+    },
+    {
+        $skip : skip
+    },
+    {
+        $limit : limitNo
+    }
+]
+)
+    if(!destinations) throw new ApiError(400, "Server error!!")
+
+    const totalCount = await Destination.countDocuments(filter)
+
+    const pagination = {
+        currentPage : pageNo,
+        totalPage : Math.ceil(totalCount / limitNo),
+        totalCount 
+    }
+
+    return res.status(200).json(new ApiResponse(200, {destinations, pagination}, "all destination fetched successfully!!"))
+})
+
+//trending top 5-10 destination on the basis of review rating 

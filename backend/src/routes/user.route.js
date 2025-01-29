@@ -8,7 +8,6 @@ const router = Router()
 router.route("/")
 .patch(verifyJWT, updateUserInfo)
 .put(upload.single("userAvatar"),verifyJWT, updateUserAvatar)
-
-router.route("/:userId").get(verifyJWT, getCurrentUser)
+.get(verifyJWT, getCurrentUser)
 
 export default router 

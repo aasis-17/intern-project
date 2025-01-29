@@ -1,39 +1,50 @@
 import React from 'react'
 import { useState } from "react";
-import FormField from '../../components/form/FormField.jsx';
+import FormField from '../components/form/FormField.jsx';
 import { useForm } from "react-hook-form"
+import authService from '../services/authServices.js';
 
-const Service = () => {
+const AdminPage = () => {
+    const [imagePreview, setImagePreview] = useState("")
 
-  const [imagePreview, setImagePreview] = useState("")
-
-  const {register ,handleSubmit} = useForm()
-
-  const handlePreview = (e) => {
-
-    const file = e.target.files[0];
-    const reader = new FileReader();
- 
-   reader.onloadend = () => {
-     setImagePreview(reader.result);  
-   };
-   if (file) {
-     reader.readAsDataURL(file);
-   } 
-    // inputRef.current = file
-    // e.target.value = null 
-  }
-
-  const onSubmit = (data) => {
-    console.log(JSON.stringify(data))
-  };
+    const {register ,handleSubmit} = useForm()
+  
+    const handlePreview = (e) => {
+  
+      const file = e.target.files[0];
+      const reader = new FileReader();
+   
+     reader.onloadend = () => {
+       setImagePreview(reader.result);  
+     };
+     if (file) {
+       reader.readAsDataURL(file);
+     } 
+      // inputRef.current = file
+      // e.target.value = null 
+    }
+  
+    const onSubmit = async (data) => {
+  
+      try{
+        const res = await authService.signup(data)
+        console.log(res)
+        const login = await authService.login(data)
+        
+      }catch(error){
+        console.log(error.message)
+      }
+      
+  
+    };
   return (
-    <div className='h-screen'>
-        <div className='text-3xl font-garamond font-medium p-3'>Your Details</div>
-         <form onSubmit={ handleSubmit(onSubmit) } className="space-y-4 h-full relative flex flex-col justify-evenly">
-          <div className='w-1/3 h-2/5 absolute right-10 top-10 rounded-lg border-black border-2'>
-            <img className=' object-contain h-full' src={imagePreview} alt='avatar' />
+   <div className='h-screen'>
+        
+         <form onSubmit={ handleSubmit(onSubmit) } className=" h-full relative flex flex-col justify-evenly ml-4">
+          <div className='w-1/3 h-2/5 absolute right-10 top-10 rounded-3xl border-black border-2 overflow-hidden'>
+            <img className=' object-cover h-full ' src={imagePreview} alt='avatar' />
           </div>
+          <div className='text-3xl font-garamond font-medium'>Your Details</div>
           {/* Full Name */}
           <div className='w-1/2'>
           <FormField 
@@ -86,20 +97,10 @@ const Service = () => {
               {...register("password",{required : true})}
             />
           </div>
-
-          {/* Avatar */}
-          <div>
-            <FormField
-              label="Avatar:"
-              type="file"
-              className="w-full mt-1"
-              labelClassName="block text-sm font-medium text-gray-600"
-              {...register("avatar")}
-            />
-          </div>
+          <div className='flex '>
 
           {/* Gender */}
-          <div>
+          <div className='w-1/2'>
             <label className="block text-sm font-medium text-gray-600">
               Gender
             </label>
@@ -115,8 +116,23 @@ const Service = () => {
             </select>
           </div>
 
+                    {/* Avatar */}
+          <div className='ml-10'>
+            <FormField
+              label="Avatar:"
+              type="file"
+              onInput={(e) => handlePreview(e)}
+              className="w-full mt-1"
+              labelClassName="block text-sm font-medium text-gray-600"
+              {...register("userAvatar")}
+            />
+          </div>
+          </div>
+
+          <div className='flex'>
+
           {/* Contact Number */}
-          <div>
+          <div className='w-1/2'>
             <FormField
               label="Contact No:"
               type="tel"
@@ -125,12 +141,12 @@ const Service = () => {
               className="w-full mt-1 px-4 py-2 border rounded-md focus:ring focus:ring-blue-300"
               pattern="[7-9]{1}[0-9]{9}"
               labelClassName="block text-sm font-medium text-gray-600"
-              {...register("contactno",{required : true})}
+              {...register("contactNo",{required : true})}
             />
           </div>
 
           {/* Address */}
-          <div>
+          <div className='ml-10 flex-1'>
             <label className="block text-sm font-medium text-gray-600">
               Address
             </label>
@@ -140,7 +156,7 @@ const Service = () => {
               {...register("address")}
             />
           </div> 
-
+          </div>
           {/* Submit Button */}
           <button
             type="submit"
@@ -148,9 +164,11 @@ const Service = () => {
           >
             Sign Up
           </button>
+
         </form>
+
     </div>
   )
 }
 
-export default Service
+export default AdminPage

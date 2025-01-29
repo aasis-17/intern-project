@@ -11,6 +11,10 @@ const destinationSchema = new mongoose.Schema(
             type : String,
             required : true
         },
+        destinationRegion :{
+            type : String,
+            required : true
+        },
         destinationCoverImage : {
             type : String,
             required : true
@@ -29,38 +33,49 @@ const destinationSchema = new mongoose.Schema(
                 type : String
             }
         ],
-        destinationMapCoordinates : {
-            longitude :{
-                type : Number,
-                required : true
-            },
-            latitude : {
-                type : Number,
-                required : true
-            }
-        },
-        routePlan :[
-            {
-                day : {
-                    type : Number,
-                    required : true
-                },
-                routeTask : {
-                    type : String,
-                    required : true
-                },
-                routeMapCoordinates : {
-                    longitude :{
-                        type : Number,
-                        required : true
-                    },
-                    latitude : {
-                        type : Number,
-                        required : true
-                    }
-                }
-            }
-        ],
+        // destinationMapCoordinates : {
+        //     longitude :{
+        //         type : Number,
+        //         required : true
+        //     },
+        //     latitude : {
+        //         type : Number,
+        //         required : true
+        //     }
+        // },
+        // routePlan :[
+        //     {
+        //         day : {
+        //             type : Number,
+        //             required : true
+        //         },
+        //         routeTask : {
+        //             type : String,
+        //             required : true
+        //         },
+        //         routeMapCoordinates : {
+        //             slocation : {
+        //                 longitude :{
+        //                 type : Number,
+        //                 required : true
+        //             },
+        //             latitude : {
+        //                 type : Number,
+        //                 required : true
+        //             }
+    //                },
+                        // elocation :{
+        //                 longitude :{
+        //                 type : Number,
+        //                 required : true
+        //             },
+        //             latitude : {
+        //                 type : Number,
+        //                 required : true
+        //             }
+        //         }
+        //     }
+        // ],
         destinationTips : {
             type :String
         },

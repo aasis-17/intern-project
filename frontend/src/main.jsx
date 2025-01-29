@@ -5,11 +5,15 @@ import './index.css'
 import App from './App.jsx'
 import Modal from "./components/Modal.jsx";
 import "@fontsource/eb-garamond"
+import { AuthProvider } from "./store/authContext.jsx";
 
 ReactDOM.createPortal(<Modal />, document.getElementById("modal-root"))
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-      <App />
+    <AuthProvider>
+        <App />
+    </AuthProvider>
+      
   </BrowserRouter>
 )

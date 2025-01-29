@@ -2,6 +2,7 @@ import React from 'react'
 import { useState } from "react";
 import FormField from '../../components/form/FormField.jsx';
 import { useForm } from "react-hook-form"
+import authService from '../../services/authServices.js';
 
 const User = () => {
 
@@ -24,16 +25,27 @@ const User = () => {
     // e.target.value = null 
   }
 
-  const onSubmit = (data) => {
-    console.log(JSON.stringify(data))
+  const onSubmit = async (data) => {
+
+    try{
+      const res = await authService.signup(data)
+      console.log(res)
+      const login = await authService.login(data)
+      
+    }catch(error){
+      console.log(error.message)
+    }
+    
+
   };
   return (
     <div className='h-screen'>
-
-         <form onSubmit={ handleSubmit(onSubmit) } className="space-y-4 h-full relative flex flex-col justify-evenly">
-          <div className='w-1/3 h-2/5 absolute right-10 top-10 rounded-lg border-black border-2'>
-            <img className=' object-contain h-full' src={imagePreview} alt='avatar' />
+        
+         <form onSubmit={ handleSubmit(onSubmit) } className=" h-full relative flex flex-col justify-evenly ml-4">
+          <div className='w-1/3 h-2/5 absolute right-10 top-10 rounded-3xl border-black border-2 overflow-hidden'>
+            <img className=' object-cover h-full ' src={imagePreview} alt='avatar' />
           </div>
+          <div className='text-3xl font-garamond font-medium'>Your Details</div>
           {/* Full Name */}
           <div className='w-1/2'>
           <FormField 
@@ -42,7 +54,7 @@ const User = () => {
                 label = "Fullname"
                 required
                 placeholder = "Enter your name"
-                {...register("fullName", {
+                {...register("fullname", {
                     required : true,
                 })
             }
@@ -113,7 +125,7 @@ const User = () => {
               onInput={(e) => handlePreview(e)}
               className="w-full mt-1"
               labelClassName="block text-sm font-medium text-gray-600"
-              {...register("avatar")}
+              {...register("userAvatar")}
             />
           </div>
           </div>
@@ -130,7 +142,7 @@ const User = () => {
               className="w-full mt-1 px-4 py-2 border rounded-md focus:ring focus:ring-blue-300"
               pattern="[7-9]{1}[0-9]{9}"
               labelClassName="block text-sm font-medium text-gray-600"
-              {...register("contactno",{required : true})}
+              {...register("contactNo",{required : true})}
             />
           </div>
 

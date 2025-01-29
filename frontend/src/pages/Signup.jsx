@@ -1,14 +1,16 @@
-import { Link, NavLink } from "react-router";
+import { Link, NavLink, useLocation } from "react-router";
 import { Outlet } from "react-router";
+import User from "./signup/User";
 
 const SignupPage = () => {
- 
+  const location = useLocation()
+  const path = location.pathname
   return (
-    <div className="flex ">
-      <div  className="bg-amber-500 p-4 w-1/3 h-screen">
-        <div className="text-5xl font-garamond font-semibold mb-6">Welcome, Signup!!</div>
+    <div className="sm:flex ">
+      <div  className="bg-amber-500 p-4 sm:w-1/3 sm:h-screen">
+        <div className="text-5xl font-garamond font-semibold mb-6">Welcome <br/>To trekers hub. {`${path === "/signup"?"" : ""}`}</div>
         <nav>
-          <ul className="flex justify-evenly">
+          {/* <ul className="flex justify-evenly">
             <li>
               <NavLink className={({isActive})=> isActive ? "bg-green-500" : ""} to={"/signup/user"} >USER</NavLink>
             </li>
@@ -18,7 +20,7 @@ const SignupPage = () => {
             <li>
               <NavLink className={({isActive})=> isActive? "bg-green-500" : ""} to={"/signup/service"} >SERVICE</NavLink>
             </li>
-          </ul>
+          </ul> */}
         </nav>
       </div>
       <main className="flex-1 mx-2 ">
