@@ -5,8 +5,7 @@ import { useNavigate, Link } from 'react-router'
 import FormField from '../components/form/FormField'
 import { AuthContext } from '../store/authContext.jsx'
 
-
-const Login = ({path, onClose}) => {
+const Login = ({onClose}) => {
 
 const {dispatch} = useContext(AuthContext) 
 const [visibility, setVisibility] =useState()
@@ -14,20 +13,14 @@ const [handleError, setHandleError] = useState()
 const {register, handleSubmit} = useForm()
 const navigate = useNavigate()
 
-
 const onSubmit = async (data) => {
     try {
         const userData = await authService.login(data.password, data.email)
         console.log(userData)
-        dispatch({type : "login", payload : userData})
-        if(userData.role === "admin") navigate("/admin")
-          else {
-            if(path){
-               onClose()
-               navigate(`${path}`)
-            }
-            else navigate("/")
-          }
+        dispatch({type : "login", payload : userData})  
+        onClose && onClose() 
+             
+        
     } catch (error) {
         setHandleError(error.message)
     }
@@ -52,7 +45,7 @@ const onSubmit = async (data) => {
             })}
              />
             </div>
-
+            
             <div>
             <FormField 
             label = "Password"

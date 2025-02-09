@@ -18,6 +18,14 @@ const serviceOwnerSchema = new mongoose.Schema(
             type : String,
             required : true
         },
+        serviceCoverImage : {
+            type :String,
+            required : true
+        },
+        serviceCoverImagePublicId : {
+            type : String,
+            required : true
+        },
         serviceLocationMapCoordinates : {
             longitude :{
                 type : Number,
@@ -34,7 +42,7 @@ const serviceOwnerSchema = new mongoose.Schema(
         serviceImagePublicId : [{
             type : String
         }],
-        serviceReview : [{
+        reviews : [{
             type : mongoose.Schema.Types.ObjectId,
             ref : "Review"
         }]

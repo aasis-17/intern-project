@@ -7,8 +7,8 @@ const authReducer = (state, action) => {
       return { ...state, isAuthenticated : true, userData : action.payload};
     case "logout" :
       return {...state, isAuthenticated : false, userData : null}
-    case "isVisible" : 
-      return {...state, isVisible : action.payload}
+    case "destinationDetails" : 
+      return {...state, details : action.payload}
     default:
       throw new Error(`Unhandled action type: ${action.type}`);
   }
@@ -20,7 +20,7 @@ const AuthContext = createContext();
 const initialState = { 
     isAuthenticated : false,
     userData : null,
-    isVisible : false
+    details : null
  };
 
 const AuthProvider = ({ children }) => {

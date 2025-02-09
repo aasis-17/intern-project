@@ -3,13 +3,14 @@ import { data } from "react-router"
 
 class reviewServices {
 
-    async createReview (formData, field, id){
-        console.log(formData, field, id)
+    async createReview (formData, reviewOption, reviewOptionId){
+        console.log(formData, reviewOption)
         try {
-            const res = await axios.post(`/api/v1/review?${field}Id=${id}`, formData)
+            const res = await axios.post(`/api/v1/review?${reviewOption}=${reviewOptionId}`, formData)
             console.log(res)
             return res.data.data
         } catch (error) {
+            console.log(error)
             throw error.response.data
         }
     }

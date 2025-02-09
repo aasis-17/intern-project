@@ -20,7 +20,7 @@ const guideSchema = new mongoose.Schema(
         guideImagePublicId : [{
             type : String
         }],
-        guideReview : [
+        reviews : [
             {
                 type : mongoose.Schema.Types.ObjectId,
                 ref : "Review"

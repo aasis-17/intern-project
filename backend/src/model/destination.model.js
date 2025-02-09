@@ -25,61 +25,64 @@ const destinationSchema = new mongoose.Schema(
         },
         destinationImages : [
             {
-                type : String
+                src : {
+                    type : String
+                },
+                publicId : {
+                    type : String
+                }
             }
         ],
-        destinationImagesPublicId : [
+ 
+        destinationMapCoordinates : {
+            longitude :{
+                type : Number,
+                required : true
+            },
+            latitude : {
+                type : Number,
+                required : true
+            }
+        },
+        routePlan :[
             {
-                type : String
+                day : {
+                    type : Number,
+                    required : true
+                },
+                routeTask : {
+                    type : String,
+                    required : true
+                },
+                routeMapCoordinates :{
+                    sLocation : {
+                        lat :{
+                        type : Number,
+                        required : true
+                    },
+                    lng : {
+                        type : Number,
+                        required : true
+                    }
+                   },
+                        eLocation :{
+                        lat :{
+                        type : Number,
+                        required : true
+                    },
+                    lng : {
+                        type : Number,
+                        required : true
+                    }
+                }
+                }
+                   
             }
-        ],
-        // destinationMapCoordinates : {
-        //     longitude :{
-        //         type : Number,
-        //         required : true
-        //     },
-        //     latitude : {
-        //         type : Number,
-        //         required : true
-        //     }
-        // },
-        // routePlan :[
-        //     {
-        //         day : {
-        //             type : Number,
-        //             required : true
-        //         },
-        //         routeTask : {
-        //             type : String,
-        //             required : true
-        //         },
-        //         routeMapCoordinates : {
-        //             slocation : {
-        //                 longitude :{
-        //                 type : Number,
-        //                 required : true
-        //             },
-        //             latitude : {
-        //                 type : Number,
-        //                 required : true
-        //             }
-    //                },
-                        // elocation :{
-        //                 longitude :{
-        //                 type : Number,
-        //                 required : true
-        //             },
-        //             latitude : {
-        //                 type : Number,
-        //                 required : true
-        //             }
-        //         }
-        //     }
-        // ],
+            ],
         destinationTips : {
             type :String
         },
-        destinationReview : [{
+        reviews : [{
             type : mongoose.Schema.Types.ObjectId,
             ref : "Review"
         }]

@@ -2,18 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import React from 'react'
 import { NavLink, Outlet, useParams } from 'react-router';
 import destinationService from '../services/destinationService';
+import Navigation from "../components/layouts/Navigation"
 
 const DestinationDetailPage = () => {
-  const destinationRoute = [{
-    day : "Day 1",
-    routeTask : "butwal to pokhara",
-    routeMapCoordinates : {slocation : {latitude :27.6866 ,longitude :83.4323}, elocation : {latitude :28.2096,longitude :83.9856}}
-  },
-{
-  day : "Day 2",
-  routeTask : "pokhara to mustang",
-  routeMapCoordinates : {slocation : {latitude :28.2096 ,longitude : 83.9856}, elocation : {latitude :28.9985,longitude :83.8473}}
-}]
 
   const {destinationId} = useParams()
 
@@ -21,6 +12,16 @@ const DestinationDetailPage = () => {
     queryKey : ["destinationId"],
     queryFn : () => destinationService.getDestinationById(destinationId)
   })
+
+  const navChild = data?.routePlan[0] ? [
+    {name : "Gallery", link : `/destination/${destinationId}/gallery`},
+    {name : "Recommended Route", link : `/destination/${destinationId}/route`},
+    {name : "Reviews", link : `/destination/${destinationId}/review`}, 
+  ] : 
+  [
+    {name : "Gallery", link : `/destination/${destinationId}/gallery`},
+    {name : "Reviews", link : `/destination/${destinationId}/review`, state : "destinationId"}, 
+  ]
 
   if(isLoading) return <div>Loading...</div>
   if(isError) return <div>{error.message}</div>
@@ -52,66 +53,16 @@ const DestinationDetailPage = () => {
           <p className="text-gray-600 leading-relaxed mb-6">
             {data.destinationInfo}
           </p>
-
-          {/* Location */}
-          <div className="flex items-center space-x-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-blue-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-            <p className="text-gray-700 font-medium">{}</p>
-          </div>
         </div>
 
         {/* navigation */}
         <nav className="mt-5">
-          <ul className="flex justify-end gap-x-10 md:text-lg font-semibold text-gray-800 mb-4">    
-            <li>
-              <NavLink
-                to={`/destination/${data._id}/gallery`}
-               className={`({isActive}) => isActive ? "hidden" : "" bg-gray-200 hover:bg-gray-400 rounded-2xl px-3 py-2`}
-              >
-                Gallery
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to={`/destination/${data._id}/route`}
-                className={`({isActive}) => isActive ? "hidden" : "" bg-gray-200 hover:bg-gray-400 rounded-2xl px-3 py-2`}
-              >
-                Recommended Routes
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to={`/destination/${data._id}/review`}    
-                className={`({isActive}) => isActive ? "hidden" : "" bg-gray-200 hover:bg-gray-400 rounded-2xl px-3 py-2`} 
-              >
-                Reviews
-              </NavLink>
-            </li>
-          </ul>
+          <Navigation children={navChild} className="flex justify-end gap-x-10 md:text-lg font-semibold text-gray-800 mb-4" navClassName={({isActive}) => `${isActive ? "hidden" : ""}  bg-gray-200 hover:bg-gray-400 rounded-2xl px-3 py-2`} />
         </nav>
 
         {/* Additional Sections (Optional) */}
         <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Outlet context = {destinationRoute}/>
+            <Outlet context = {data}/>
         </div>
       </div>
     </div>

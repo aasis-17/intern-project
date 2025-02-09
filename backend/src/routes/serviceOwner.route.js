@@ -1,5 +1,5 @@
 import {Router} from "express"
-import { addServiceImages, deleteServiceOwnerProfile, getServiceProfile, removeServiceImage, updateServiceInfo, upgradeToService } from "../contorller/service.controller.js"
+import { addServiceImages, deleteServiceOwnerProfile, getServiceProfile, getServiceProfileByUserId, removeServiceImage, updateServiceInfo, upgradeToService } from "../contorller/service.controller.js"
 import { verifyJWT } from "../middleware/auth.middleware.js"
 import { upload } from "../middleware/multer.middleware.js"
 import { accessToRole } from "../middleware/access.middleware.js"
@@ -7,7 +7,9 @@ import { accessToRole } from "../middleware/access.middleware.js"
 const router = Router()
 
 router.route("/")
-.post(upload.array("serviceImages", 5), verifyJWT,accessToRole(["user"]),  upgradeToService)
+.post(upload.single("serviceCoverImage", 1), verifyJWT,accessToRole(["user"]),  upgradeToService)
+
+router.route("/:userId").get(verifyJWT, getServiceProfileByUserId)
 
 router.route("/:serviceId")
 .get(verifyJWT,  getServiceProfile)

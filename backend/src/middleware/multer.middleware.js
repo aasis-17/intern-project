@@ -3,7 +3,7 @@ import multer from "multer";
 //Here we validate file type and allow access to valid type
 const typeValidation = (req, file, cd) => {
     console.log(file.mimetype)
-    const allowedTypes = ["image/jpeg", "image/png"]
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg","image/webp"]
     if(!allowedTypes.includes(file.mimetype)) return cd(new Error("Invalide file type!!"), false)
     return cd(null, true)   
 }
@@ -11,6 +11,7 @@ const typeValidation = (req, file, cd) => {
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
+      console.log(file)
       cb(null, './src/Public/temp')
     },
     filename: function (req, file, cb) {

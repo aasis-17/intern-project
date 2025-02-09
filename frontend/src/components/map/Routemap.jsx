@@ -1,23 +1,29 @@
 import React, { useEffect } from 'react';
 import L from 'leaflet';
+import { latLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 
-function RouteMap({location, sLocation, eLocation, intermediate=[]}) {
+function RouteMap({location={}, routePlan, intermediate}) {
+  console.log(routePlan)
   useEffect(() => {
-    console.log(sLocation, eLocation)
+    console.log(location)
     // Initialize the map
-    const map = L.map('map').setView([location.latitude, location.longitude], 5);
+    const map = L.map('map').setView([location.latitude, location.longitude], 10);
+
+    L.marker(latLng(location.latitude, location.longitude))
+    .addTo(map)
 
     // Add a tile layer (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
     .addTo(map);
 
     // Define start and end points
-    const start = L.latLng(sLocation.latitude, sLocation.longitude); 
+    if(routePlan){
+    const start = L.latLng(routePlan.sLocation.latitude, routePlan.sLocation.longitude); 
     const centerRoute = intermediate?.map(route => L.latLng(route.latitude, route.longitude));
-    const end = L.latLng(eLocation.latitude, eLocation.longitude); 
+    const end = L.latLng(routePlan.eLocation.latitude, routePlan.eLocation.longitude); 
 
     // Initialize the routing control
     const control =L.Routing.control({
@@ -44,23 +50,13 @@ function RouteMap({location, sLocation, eLocation, intermediate=[]}) {
       //   });
       // }
     }).addTo(map);
-              // Handle route found event
-              control.on('routesfound', function (e) {
-                const routes = e.routes;
-                console.log('Routes found:', routes);
-              });
-          
-              // Handle route selected event
-              control.on('routeselected', function (e) {
-                const route = e.route;
-                console.log('Route selected:', route);
-              })
 
+  }
     // Cleanup on unmount
     return () => {
       map.remove();
     };
-  }, [sLocation.latitude]);
+  }, [routePlan]);
 
   return <div id="map" style={{ height: '100%', width: '100%' }} />;
 

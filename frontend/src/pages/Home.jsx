@@ -11,12 +11,12 @@ const Home = () => {
 
     // const [isModalVisible, setIsModalVisible] = useState(false);
 
-    const {data, isLoading,isError, error} = useQuery({
+    const {data, isLoading, isError, error} = useQuery({
       queryKey :["destination"],
       queryFn : () => destinationService.getDestination()
     })
 
-  if(isError) return <div>{error.message}</div>
+  // if(isError) return <div>{error.message}</div>
 
   if(isLoading) return <div>Loading!!</div>
 
@@ -27,7 +27,7 @@ const Home = () => {
         <div className='pl-9 text-8xl text-white font-garamond font-medium'>Weaving your Dreams <br/>into Unforgettable<br/>Adventures</div>
         <div className="p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 
-      { data.destinations?.map((destination) => (
+      { !isError && data.destinations?.map((destination) => (
         <DestinationCard
           key={destination._id}
           imageUrl={destination.destinationCoverImage}

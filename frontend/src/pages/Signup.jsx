@@ -23,7 +23,7 @@ const SignupPage = () => {
           </ul> */}
         </nav>
       </div>
-      <main className="flex-1 mx-2 ">
+      <main className="flex-1">
         <Outlet /> {/* This renders the matching route's component */}
       </main>
     </div>

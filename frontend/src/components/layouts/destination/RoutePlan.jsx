@@ -1,14 +1,15 @@
 import React, { useState } from 'react'
 import 'leaflet/dist/leaflet.css';
-import RouteMap from '../../Routemap';
+import RouteMap from '../../map/Routemap';
 import { useOutletContext } from 'react-router';
 
 const RoutePlan = () => {
 
     const [routeIndex, setRouteIndex] = useState(0)
-   const destinationRoute = useOutletContext()
+   const destination = useOutletContext()
+   console.log(destination)
     const handleNext =() => {
-        if(routeIndex < destinationRoute.length - 1) setRouteIndex(prev => prev + 1)       
+        if(routeIndex < destination.routePlan?.length - 1) setRouteIndex(prev => prev + 1)       
     }
 
     const handleBack = () => {
@@ -24,9 +25,8 @@ const RoutePlan = () => {
          {/* add map */}
 
       <RouteMap  
-        location={destinationRoute[routeIndex].routeMapCoordinates.slocation} 
-        sLocation={destinationRoute[routeIndex].routeMapCoordinates.slocation} 
-        eLocation={destinationRoute[routeIndex].routeMapCoordinates.elocation}
+        location={destination.routePlan[routeIndex]?.routeMapCoordinates.slocation} 
+        routePlan={destination.routePlan[routeIndex]}
         />
 
        </div>
@@ -38,7 +38,7 @@ const RoutePlan = () => {
          Recommended Route plan
        </h3>
        <ul className="space-y-2">
-         <li className="text-gray-600">{destinationRoute[routeIndex].routeTask}</li>
+         <li className="text-gray-600">{destination.routePlan[routeIndex]?.routeTask}</li>
          <li className="text-gray-600">Exploring Ubud's Rice Terraces</li>
          <li className="text-gray-600">Visiting Uluwatu Temple</li>
          <li className="text-gray-600">Snorkeling in Nusa Penida</li>

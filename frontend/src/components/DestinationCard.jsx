@@ -26,7 +26,7 @@ const DestinationCard = ({ id, imageUrl, destinationName, review, className, inf
 
       {/* Review Overlay */}
       <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-sm px-2 py-1 rounded">
-        ⭐ {review.toFixed(1)}
+        ⭐ {review?.toFixed(1)}
       </div>
 
       {/* Destination Name */}
@@ -36,7 +36,7 @@ const DestinationCard = ({ id, imageUrl, destinationName, review, className, inf
     </div>
   )
   else return(
-<div onClick={()=> navigate("/destination")} className={`${className}h-56 max-w-sm rounded overflow-hidden shadow-lg relative`}>
+<div onClick={()=> navigate(`/destination/${id}`)} className={`${className}h-56 max-w-sm rounded overflow-hidden shadow-lg relative`}>
       {/* Image Container */}
       <div className=" relative rounded-lg overflow-hidden">
         {/* Image */}
@@ -52,7 +52,7 @@ const DestinationCard = ({ id, imageUrl, destinationName, review, className, inf
 
       {/* Review Overlay */}
       <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-sm px-2 py-1 rounded">
-        ⭐ {review.toFixed(1)}
+        ⭐ {review?.toFixed(1)}
       </div>
 
       {/* Destination Name */}

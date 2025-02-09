@@ -1,5 +1,5 @@
 import { ApiError, ApiResponse, asyncHandler } from "../utils/index.js";
-import { removeFileFromCloudinary, uploadMultipleFileOnCloudinary } from "../utils/fileHandler.js";
+import { removeFileFromCloudinary, uploadFileOnCloudinary, uploadMultipleFileOnCloudinary } from "../utils/fileHandler.js";
 import { ServiceOwner } from "../model/role.model/serviceOwner.model.js";
 import { isValidObjectId } from "mongoose";
 import { User } from "../model/role.model/user.model.js";
@@ -7,25 +7,36 @@ import { User } from "../model/role.model/user.model.js";
 
 export const upgradeToService = asyncHandler( async(req, res) => {
 
-    const {serviceName, serviceInfo, serviceDestination, serviceLocationMapCoordinates} = req.body
+    const {serviceName, serviceInfo, serviceDestination,latitude, longitude} = req.body
 
-    if(!serviceInfo || !serviceName || !serviceDestination || !serviceLocationMapCoordinates.longitude || !serviceLocationMapCoordinates.latitude) throw new ApiError(400, "Field missing!!")
+    if(!serviceInfo || !serviceName || !serviceDestination || !longitude || !latitude) throw new ApiError(400, "Field missing!!")
 
-    const localFilePath = req.files?.map(file => file.path) || []
+    // const localFilePath = req.files?.map(file => file.path) || []
+    // console.log(req.file?.path)
+    const localFilePath = req.file?.path
+    
 
-    let uploadImage;
-    if(localFilePath[0]){
-        uploadImage = await uploadMultipleFileOnCloudinary(localFilePath, "image", "serviceImage")
-    }
+    if(!localFilePath) throw new ApiError(400, "Image missing!!")
+
+    // let uploadImage;
+    // if(localFilePath[0]){
+        // uploadImage = await uploadMultipleFileOnCloudinary(localFilePath, "image", "serviceImage")
+    // }
+    const uploadImage =await uploadFileOnCloudinary(localFilePath, "image","serviceCoverImage")
  
     const serviceOwner = await ServiceOwner.create({
         userId : req.user._id,
         serviceName,
         serviceInfo,
         serviceDestination,
-        serviceLocationMapCoordinates,
-        serviceImages : uploadImage?.map(image => image.url) || [],
-        serviceImagePublicId : uploadImage?.map(image => image.public_id || [])
+        serviceLocationMapCoordinates : {
+            longitude : longitude,
+            latitude : latitude
+        },
+        // serviceImages : uploadImage?.map(image => image.url) || [],
+        // serviceImagePublicId : uploadImage?.map(image => image.public_id || [])
+        serviceCoverImage : uploadImage.url,
+        serviceCoverImagePublicId : uploadImage.public_id
     })
 
     if(!serviceOwner) throw new ApiError(500, "Server error while creating service owner!!")
@@ -170,4 +181,17 @@ export const deleteServiceOwnerProfile = asyncHandler( async( req,res) => {
 
     return res.status(200).json(new ApiResponse(200, {serviceOwner, role : existingUser.role}, "service owner account deleted successfully!!"))
     
+})
+
+export const getServiceProfileByUserId = asyncHandler(async(req, res) => {
+
+    const {userId} = req.params
+
+    if(!isValidObjectId(userId)) throw new ApiError(400, "Invalid userid!!")
+
+    const serviceProfile = await ServiceOwner.findOne({userId}).populate("reviews")
+
+    if(!serviceProfile)  throw new ApiError(404, "Service profile not found!!")
+
+    return res.status(200).json(new ApiResponse(200, serviceProfile, "Service profile fetched successfully!!"))
 })

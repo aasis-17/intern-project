@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const Modal = ({ visible, onClose, children }) => {
-  if (!visible) return null; // Render nothing if not visible
+if (!visible) return null; // Render nothing if not visible
 
   return (
     <div className="z-50 fixed top-0 left-0 w-full h-full flex items-center justify-center bg-transparent backdrop-blur-sm" onClick={onClose}>

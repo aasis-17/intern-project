@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useLocation, useOutletContext, useSubmit } from "react-router";
-import { useMutation} from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
 import reviewService from "../services/reviewService.js"
+import { AuthContext } from "../store/authContext.jsx";
 
 const ReviewComponent = () => {
 
@@ -10,13 +11,12 @@ const ReviewComponent = () => {
     rating : 0,
     comment : ""
   });
-  const destinationRoute = useOutletContext()
-  const location = useLocation()
-  
-  const field = location.pathname.split("/")[1]
-  const id = location.pathname.split("/")[2] // this for dummy data
-  // const id  = destinationRoute._id // this is used when data is provided
-  console.log(id)
+  const details = useOutletContext()
+  const reviewOption = useLocation()
+  const reviewOptionId = details._id
+  const {state} = useContext(AuthContext)
+
+  const queryClient = useQueryClient()
 
   const handleStarClick = (star) => {
     setReviews(prev => ({...prev, rating : star }))
@@ -34,26 +34,36 @@ const ReviewComponent = () => {
     setReviews(prev => ({...prev, comment : e.target.value}))
   };
 
+  const deleteMutation = useMutation({
+    mutationFn : async(reviewId) => {
+      await reviewService.deleteReview(reviewId)
+    },
+    onSuccess : () => {
+      queryClient.invalidateQueries({queryKey : ["destinationId"]})
+      alert(`Review deleted successfully!!`)
+    },
+    onError : () => {
+      alert(`Error while deleting review!!`)
+    }
+  })
+
   const mutation = useMutation({
-    mutationFn :()=>{ 
+    mutationFn : async()=>{ 
       if (reviews.rating === 0 || !reviews.comment.trim() === "") {
         alert("Please provide a rating and a comment before submitting.");
         return;
       }
-      // console.log(reviews)
-      reviewService.createReview(reviews, field, id)
+
+      await reviewService.createReview(reviews, reviewOption.state, reviewOptionId)
     },
     onSuccess : () => {
       queryClient.invalidateQueries({ queryKey: ['destinationId'] })
+      alert(`Review submitted to ${reviewOption.state} successfully!!`)
+    },
+    onError : () => {
+      alert("Error while creating review!!")
     }
   })
-  const onSubmit = () => {
-    if (reviews.rating === 0 || !reviews.comment.trim() === "") {
-      alert("Please provide a rating and a comment before submitting.");
-      return;
-    }
-    
-  }
 
 
   return (
@@ -101,37 +111,46 @@ const ReviewComponent = () => {
       >
         Submit Review
       </button>
+      </div>
 
       {/* Display Submitted Reviews */}
-      {/* <div className="mt-8">
+      <div className=" p-8 bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl border border-purple-100">
         <h3 className="text-xl font-semibold text-purple-800 mb-4">
           Submitted Reviews
         </h3>
-        {reviews?.length === 0 ? (
+        {details.reviews?.length === 0 ? (
           <p className="text-gray-500 text-center">No reviews yet.</p>
         ) : (
-          reviews.map((review, index) => (
+          <div className="overflow-y-scroll h-96">{
+          details.reviews?.map((review) => (
             <div
-              key={index}
-              className="mb-4 p-4 bg-white rounded-lg shadow-md border border-purple-100"
+              key={review._id}
+              className="flex  mb-4 p-4 bg-white rounded-lg shadow-md border border-purple-100"
             >
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="flex">
+              <div className="w-1/4">
+                <img alt="avatar" className="w-7 h-7 rounded-full mb-2" src={review.creator.avatar} />
+                <span>{review.creator.fullname}</span>
+              </div>
+              <div className="flex-1 items-center space-x-2  ">
+                <div className="flex justify-end">
                   {[...Array(review.rating)].map((_, i) => (
                     <span key={i} className="text-yellow-400 text-xl">
                       ★
                     </span>
                   ))}
                 </div>
-                <span className="text-gray-500 text-sm">{review.date}</span>
+                <p className="text-gray-700 text-lg">{review.reviewMessage}</p>
+                
               </div>
-              <p className="text-gray-700">{review.comment}</p>
+              {review.creator._id === state.userData._id && <span onClick={() =>deleteMutation.mutateAsync(review._id)} className= " flex items-end  text-red-500 text-xs cursor-pointer">Delete</span>}
             </div>
-          ))
-        )} 
-       </div> */}
-      </div>
-    </>
+            ))
+          }
+          </div>)
+        } 
+       </div>
+      </>
+    
   );
 };
 

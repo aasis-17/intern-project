@@ -8,37 +8,28 @@ function PageProtector({children, authentication = true}) {
   
     const navigate = useNavigate()
     const {state} = useContext(AuthContext)
-    console.log(state.isAuthenticated !== authentication)
 
-    const [isLoading, setIsLoading] = useState(true)
     const [visible, setVisible] = useState(false)
-    const location = useLocation()
-    const path = location.pathname.replace("/route","")
-    console.log(path)
 
     useEffect(() => {
         if(authentication && state.isAuthenticated !== authentication){
             setVisible(true)
         }
         else if(!authentication && state.isAuthenticated !== authentication){
-            navigate("/")
+        state.userData.role === "admin" ? navigate("/admin",{ replace : true}) : navigate("/",{ replace : true})  //it is same as history.forward()      
         }
 
-        setIsLoading(false)
-
     },[state.isAuthenticated, navigate,  authentication])
-
-    if(isLoading) return <div>loading...</div>
       
     return(<>
                 {!visible && children}
                 <Modal 
                     onClose={() =>{
                     setVisible(false)
-                    navigate(`${path}`)
+                    navigate(-1)   // it is same as history.back() (for previous path)
                     }}  
                     visible={visible}>
-                    <Login onClose={()=> setVisible(false)} path={location.pathname}/>
+                    <Login onClose={()=> setVisible(false)}/>
                 </Modal>
             </>)
 }

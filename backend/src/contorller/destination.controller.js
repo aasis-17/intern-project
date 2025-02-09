@@ -2,15 +2,14 @@ import { ApiError, ApiResponse, asyncHandler } from "../utils/index.js";
 import { Destination } from "../model/destination.model.js";
 import { removeFileFromCloudinary, uploadFileOnCloudinary, uploadMultipleFileOnCloudinary } from "../utils/fileHandler.js";
 import { isValidObjectId } from "mongoose";
+import { Route } from "../model/destinationRoute.model.js";
 
 
 export const createDestination = asyncHandler( async(req, res) => {
 
-    const {destinationName, destinationInfo, destinationMapCoordinates={longitude:"12", latitude:"123"}, routePlan,destinationRegion, destinationTips} = req.body
+    const {destinationName, destinationInfo, longitude="12", latitude="123", destinationRegion, destinationTips} = req.body
     console.log(destinationInfo,destinationName, destinationTips)
-    if(!destinationInfo || !destinationTips || !destinationName ||!destinationMapCoordinates.longitude || !destinationMapCoordinates.latitude || !destinationRegion
-        // || !routePlan[0]
-    ){
+    if(!destinationInfo || !destinationTips || !destinationName ||!longitude || !latitude || !destinationRegion){
         throw new ApiError(400, "Filed missing!!")
     }
 
@@ -36,9 +35,8 @@ export const createDestination = asyncHandler( async(req, res) => {
         destinationCoverImagePublicId : uploadCoverImage.public_id,
         destinationImages : uploadImage?.map(image => image.url) || [],
         destinationImagesPublicId : uploadImage?.map(image => image.public_id) || [],
-        // destinationMapCoordinates,
-        destinationTips,
-        // routePlan
+        destinationMapCoordinates : {latitude : latitude, longitude : longitude},
+        destinationTips
     })
 
     if(!destination) throw new ApiError(500, "Server error while creating destination!!")
@@ -52,58 +50,74 @@ export const updateDestination = asyncHandler( async (req, res) => {
 
     if(!isValidObjectId(destinationId)) throw new ApiError(400, "Invalid id!!")
 
-    const {destinationName, destinationInfo, destinationTips,destinationMapCoordinates, routePlan} = req.body
+    const {destinationName, destinationInfo, destinationTips, latitude, longitude} = req.body
 
-    if(!destinationInfo || !destinationTips || !destinationName || !destinationMapCoordinates.longitude || !destinationMapCoordinates.latitude || !routePlan || !routePlan[0]){
+    if(!destinationInfo || !destinationTips || !destinationName || !longitude || !latitude){
         throw new ApiError(400, "Field missing!!")
     }
 
-    const destination = await Destination.findByIdAndUpdate(destinationId, {
+    const destination = await Destination.findById(destinationId)
+
+    if(!destination) throw new ApiError(404, "Destination not found!!")
+
+    const localFileCoverPath = req.file.destinationCoverImage[0]?.path
+    console.log(localFileCoverPath)
+
+    let uploadCoverImage;
+
+    if(localFileCoverPath){
+        await removeFileFromCloudinary(destination.destinationCoverImagePublicId)
+        uploadCoverImage = await uploadFileOnCloudinary(localFileCoverPath, "image", `destinationImage/${destinationName}`)
+    }
+    
+
+    const updateDestination = await Destination.findByIdAndUpdate(destinationId, {
         $set : {
             destinationName,
             destinationInfo,
-            destinationMapCoordinates,
+            destinationMapCoordinates : {latitude : latitude, longitude : longitude},
             destinationTips,
-            routePlan
+            destinationCoverImage : uploadCoverImage && uploadCoverImage.url ,
+            destinationCoverImagePublicId : uploadCoverImage && uploadCoverImage.public_id
         }
     },{ new : true})
 
-    if(!destination) throw new ApiError(500, "Server errro while updating destination!!")
+    if(!updateDestination) throw new ApiError(500, "Server errro while updating destination!!")
 
-    return res.status(200).json( new ApiResponse(200, destination, "Destination details updated successfully!!"))
-
-})
-
-export const updateDestinationCoverImage = asyncHandler( async(req, res) => {
-
-    const {destinationId} = req.params
-
-    if(!isValidObjectId(destinationId)) throw new ApiError(400, "Invalid id!!")
-
-    const localFileCoverPath = req.file?.path
-
-    if(!localFileCoverPath) throw new ApiError(400, "CoverImage not selected!!")
-
-    const destination = await Destination.findById(destinationId)
-
-    if(!destination) throw new ApiError(500, "Destination not found!!")
-
-    await removeFileFromCloudinary(destination.destinationCoverImagePublicId)
-
-    const upload = await uploadFileOnCloudinary(localFileCoverPath, "image", `destinationImage/${destination.destinationName}`)
-
-    const updateCoverImage = await Destination.findByIdAndUpdate(destinationId,{
-        $set : {
-            destinationCoverImage : upload.url,
-            destinationCoverImagePublicId : upload.public_id
-        }
-    },{ new : true})
-
-    if(!updateCoverImage) throw new ApiError(500, "Server Error!!")
-
-    return res.status(200).json( new ApiResponse(200, updateCoverImage, "Destination cover image updated successfully!!"))
+    return res.status(200).json( new ApiResponse(200, updateDestination, "Destination details updated successfully!!"))
 
 })
+
+// export const updateDestinationCoverImage = asyncHandler( async(req, res) => {
+
+//     const {destinationId} = req.params
+
+//     if(!isValidObjectId(destinationId)) throw new ApiError(400, "Invalid id!!")
+
+//     const localFileCoverPath = req.file?.path
+
+//     if(!localFileCoverPath) throw new ApiError(400, "CoverImage not selected!!")
+
+//     const destination = await Destination.findById(destinationId)
+
+//     if(!destination) throw new ApiError(500, "Destination not found!!")
+
+//     await removeFileFromCloudinary(destination.destinationCoverImagePublicId)
+
+//     const upload = await uploadFileOnCloudinary(localFileCoverPath, "image", `destinationImage/${destination.destinationName}`)
+
+//     const updateCoverImage = await Destination.findByIdAndUpdate(destinationId,{
+//         $set : {
+//             destinationCoverImage : upload.url,
+//             destinationCoverImagePublicId : upload.public_id
+//         }
+//     },{ new : true})
+
+//     if(!updateCoverImage) throw new ApiError(500, "Server Error!!")
+
+//     return res.status(200).json( new ApiResponse(200, updateCoverImage, "Destination cover image updated successfully!!"))
+
+// })
 
 export const addDestinationImage = asyncHandler( async(req, res) => {
 
@@ -128,12 +142,14 @@ export const addDestinationImage = asyncHandler( async(req, res) => {
     const addImage = await Destination.findByIdAndUpdate(destinationId,{
         $push : {
             destinationImages : {
-                $each : upload.map(image => image.url)
-            },
-            destinationImagesPublicId : {
-                $each : upload.map(image => image.public_id)
-            }          
-        }
+                    $each : upload.map(image =>  {
+                        return {
+                            src : image.url, 
+                            publicId : image.public_id
+                        }})
+                },
+            }
+
     },{ new : true})
 
     if(!addImage) throw new ApiError(500, "Server error while updating images!!")
@@ -147,23 +163,23 @@ export const deleteDestinationImage = asyncHandler( async(req, res) => {
 
     if(!destinationId) throw new ApiError(400, "Invalid Id!!")
     
-    const {destinationImages, destinationImagesPublicId} = req.body
+    const {src, publicId} = req.body
+    console.log(src, publicId)
 
-    if(!destinationImages[0] || !destinationImagesPublicId[0]) throw new ApiError(400, "Image missing!!")
+    if(!src || !publicId) throw new ApiError(400, "Image missing!!")
 
-    const removeImage = await removeFileFromCloudinary(destinationImagesPublicId, "image")
+    const removeImage = await removeFileFromCloudinary(publicId, "image")
 
     if(!removeImage) throw new ApiError(500, "Server error!!")
 
     const destination = await Destination.findByIdAndUpdate(destinationId,{
         $pull : {
-            destinationImages : {
-                $in : destinationImages
+            destinationImages : {src, publicId}
             },
-            destinationImagesPublicId : {
-                $in : destinationImagesPublicId
-            }
-        }
+            // destinationImagesPublicId : {
+            //     $in : destinationImagesPublicId
+            // }
+        
     }, {new : true})
 
     if(!destination) throw new ApiError(500, "Server Error!!")
@@ -178,7 +194,7 @@ export const getDestinationById = asyncHandler(async(req,res) => {
 
     if(!destinationId) throw new ApiError(400, "Invalid id!!")
 
-    const destination = await Destination.findById(destinationId)
+    const destination = await Destination.findById(destinationId).populate({path :"reviews", populate :[ "comments","creator"]})
 
     if(!destination) throw new ApiError(404, "Destination doesnot exists!!")
 
@@ -228,15 +244,15 @@ export const getAllDestination = asyncHandler(async(req, res) => {
     {
         $lookup :{
             from : 'reviews',
-            localField : "destinationReview",
+            localField : "reviews",
             foreignField : "_id",
-            as : "destinationReview",
+            as : "reviews",
         }
     },
     {
         $addFields : {
             avgReview : {
-                $avg : "$destinationReview.rating"
+                $avg : "$reviews.rating"
             }
         }
     },
@@ -265,3 +281,24 @@ export const getAllDestination = asyncHandler(async(req, res) => {
 })
 
 //trending top 5-10 destination on the basis of review rating 
+
+export const addRoutePlan = asyncHandler(async(req, res) => {
+    const {destinationId} = req.params
+
+    if(!isValidObjectId(destinationId)) throw new ApiError(404, "Invalid id!!")
+        const routePlan = req.body
+    console.log(routePlan)
+
+    if(!routePlan[0]) throw new ApiError(400, "Route plan missing!!")
+
+    const destination = await Destination.findByIdAndUpdate(destinationId,{
+            $set :{
+                routePlan
+            }
+    
+    },{new : true})
+
+    if(!destination) throw new ApiError(500, "serverError")
+
+    return res.status(200).json(new ApiResponse(200, destination, "RoutePlan added successfully!!"))
+})

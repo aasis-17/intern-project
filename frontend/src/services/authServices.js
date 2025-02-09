@@ -36,6 +36,14 @@ class authServices {
             throw error
         }
     }
+    async updatePassword(formData){
+        try {
+            const res = await axios.patch("/api/v1/auth", formData)
+            return res.data.data
+        } catch (error) {
+            throw error.response.data.message
+        }
+    }
 }
 
 const authService = new authServices()

@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from "prop-types"
 import { forwardRef } from 'react'
+import { v4 as uuidv4 } from 'uuid';
 
 
 const FormField= ({
@@ -13,18 +14,19 @@ const FormField= ({
   ...props
 },ref) =>
 {
-  
+  const key = uuidv4()
+  console.log(defaultValue)
 return (
 
   <>
-    { label && <label className={`${labelClassName}`} htmlFor={label}>
+    { label && <label className={`${labelClassName}`} htmlFor={key}>
       {label}
       {required && <span className='text-red-500'>*</span>}
       </label> }
       <input
-          id={label}
-          default={defaultValue}
-          className={`outline-none ${className}`}
+          id={key}
+          defaultValue={defaultValue}
+          className={` ${className}  px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600`}
           type={type}
           required={required}
           {...props}

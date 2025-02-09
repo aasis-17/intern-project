@@ -27,21 +27,21 @@ export const createReview = asyncHandler( async(req, res) => {
     if(Object.keys(objectId)[0] === "destinationId"){
          addReview = await Destination.findByIdAndUpdate(objectId.destinationId,{
             $push : {
-                destinationReview : createdReview._id
+                reviews : createdReview._id
             }
         },{new : true})
     }
     if(Object.keys(objectId)[0] === "guideId"){
          addReview = await Guide.findByIdAndUpdate(objectId.destinationId,{
             $push : {
-                guideReview : createdReview._id
+                reviews : createdReview._id
             }
         },{new : true})
     }
     if(Object.keys(objectId)[0] === "serviceId"){
          addReview = await ServiceOwner.findByIdAndUpdate(objectId.serviceId,{
             $push : {
-                serviceReview : createdReview._id
+                reviews : createdReview._id
             }
             
         },{new : true})
