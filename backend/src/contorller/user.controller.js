@@ -6,7 +6,7 @@ import { isValidObjectId } from "mongoose";
 
 export const updateUserInfo = asyncHandler(async (req, res) => {
 
-    const {fullname, gender, contactNo, address, username } = req.body
+    const {fullname, gender,email, contactNo, address, username } = req.body
 
     if(!fullname || !gender || !username) throw new ApiError(400, "Field missing!!")
 
@@ -14,6 +14,7 @@ export const updateUserInfo = asyncHandler(async (req, res) => {
         $set : {
             fullname,
             username,
+            email,
             gender,
             contactNo,
             address
@@ -66,6 +67,19 @@ export const getCurrentUser = asyncHandler(async(req, res) => {
     if(!user) throw new ApiError(404, "User not found!!")
 
     return res.status(200).json(new ApiResponse(200, user, "User fetched successfully!!"))
+})
+
+export const getUserById = asyncHandler(async(req, res) => {
+
+    const {userId} = req.params
+
+    if(!isValidObjectId(userId)) throw new ApiError(400, "Invalid id !!")
+
+    const userDetails = await User.findById(userId).select(["-password", "-refreshToken"])
+
+    if(!userDetails) throw new ApiError(404, "User not found!!")
+
+    return res.status(200).json(new ApiResponse(200, userDetails, "User fetched successfully!!"))
 })
 
 export const deactivateUser = asyncHandler(async(req,res) => {})

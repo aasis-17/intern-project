@@ -14,7 +14,7 @@ const generateTokens = async (user) => {
 
 export const signup = asyncHandler(async (req, res) => {
 
-    const {fullname, username, email, password, gender, role} = req.body
+    const {fullname, username, email, password, gender, role, contactNo, address} = req.body
 
     if([fullname, username, email, password, gender].some(field => field?.trim() === "")){
         throw new ApiError(400, "All fields are required!!")
@@ -30,7 +30,9 @@ export const signup = asyncHandler(async (req, res) => {
         email,
         password,
         gender,
-        role
+        role,
+        contactNo,
+        address
     })
 
     if(!user) throw new ApiError(500, "Error while creating user in DB!!")
@@ -42,6 +44,7 @@ export const signup = asyncHandler(async (req, res) => {
 export const login = asyncHandler( async (req, res) => {
 
     const {email, password} = req.body
+    console.log(email, password)
 
     if(!email || !password) throw new ApiError(400, "Email or password missing!!")
     
@@ -108,3 +111,4 @@ export const updatePassword = asyncHandler(async(req, res) => {
 
     return res.status(200).json(new ApiResponse(200, {}, "Password updated successfully!!"))
 })
+

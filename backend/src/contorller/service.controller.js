@@ -3,71 +3,145 @@ import { removeFileFromCloudinary, uploadFileOnCloudinary, uploadMultipleFileOnC
 import { ServiceOwner } from "../model/role.model/serviceOwner.model.js";
 import { isValidObjectId } from "mongoose";
 import { User } from "../model/role.model/user.model.js";
+import mongoose from "mongoose";
 
 
 export const upgradeToService = asyncHandler( async(req, res) => {
 
-    const {serviceName, serviceInfo, serviceDestination,latitude, longitude} = req.body
+    const {serviceName, serviceInfo,serviceType, serviceDestination, latitude, longitude} = req.body
 
     if(!serviceInfo || !serviceName || !serviceDestination || !longitude || !latitude) throw new ApiError(400, "Field missing!!")
 
-    // const localFilePath = req.files?.map(file => file.path) || []
-    // console.log(req.file?.path)
     const localFilePath = req.file?.path
-    
 
     if(!localFilePath) throw new ApiError(400, "Image missing!!")
 
-    // let uploadImage;
-    // if(localFilePath[0]){
-        // uploadImage = await uploadMultipleFileOnCloudinary(localFilePath, "image", "serviceImage")
-    // }
-    const uploadImage =await uploadFileOnCloudinary(localFilePath, "image","serviceCoverImage")
- 
-    const serviceOwner = await ServiceOwner.create({
-        userId : req.user._id,
-        serviceName,
-        serviceInfo,
-        serviceDestination,
-        serviceLocationMapCoordinates : {
-            longitude : longitude,
-            latitude : latitude
-        },
-        // serviceImages : uploadImage?.map(image => image.url) || [],
-        // serviceImagePublicId : uploadImage?.map(image => image.public_id || [])
-        serviceCoverImage : uploadImage.url,
-        serviceCoverImagePublicId : uploadImage.public_id
-    })
-
-    if(!serviceOwner) throw new ApiError(500, "Server error while creating service owner!!")
+    const uploadImage = await uploadFileOnCloudinary(localFilePath, "image",`serviceImage/${serviceName}`)
     
-    const existingUser = await User.findByIdAndUpdate(req.user._id,{
-        $set :{
+    if(req.user.role === "admin"){
+        const serviceOwner = await ServiceOwner.create({
+            serviceType,
+            serviceName,
+            serviceInfo,
+            serviceDestination,
+            serviceLocationMapCoordinates : {
+                longitude : longitude,
+                latitude : latitude
+            },
+            serviceCoverImage : uploadImage.url,
+            serviceCoverImagePublicId : uploadImage.public_id,
+            isApproved : "default"
+        })
+
+        return res.status(201).json(new ApiResponse(200, serviceOwner, "Service created by admin successfully!!"))
+    }else{
+        const serviceOwner = await ServiceOwner.create({
+            userId : req.user._id,
+            serviceName,
+            serviceInfo,
+            serviceDestination,
+            serviceLocationMapCoordinates : {
+                longitude : longitude,
+                latitude : latitude
+            },
+            serviceCoverImage : uploadImage.url,
+            serviceCoverImagePublicId : uploadImage.public_id
+        })
+        
+        return res.status(200).json(new ApiResponse(200, {serviceOwner}, "Request send to admin!!"))
+    }
+
+})
+
+export const approveServiceRequest = asyncHandler( async(req, res) => {
+
+    const {userId} = req.params
+
+    if(!isValidObjectId(userId)) throw new ApiError(400, "Invalid userid!!")
+
+    const upgrade = await User.findByIdAndUpdate(userId,{
+        $set : {
             role : "serviceOwner"
         }
-    },{ new : true })
+    },{
+        new : true
+    })
 
-    if(!existingUser) throw new ApiError(500, "Error while upgrading user!!")
+    if(!upgrade) throw new ApiError(500, "Server error!!")
+
+    const approved = await ServiceOwner.findOneAndUpdate({userId }, {
+        $set : {
+            isApproved : "approved"
+        }
+    },{
+        new : true
+    })
+
+    if(!approved) throw new ApiError(500, "Server error!!")
+
+    return res.status(200).json(new ApiResponse(200, {}, `${upgrade.fullname} has been upgraded to service!!`))
+})
+
+export const getServiceRequest = asyncHandler(async(req, res) => {
+
+    const {isApproved} = req.query
+    console.log(isApproved)
+
+    // if(!serviceRequest) throw new ApiError(400, "request missing!")
+
+    const requests = await ServiceOwner.find(isApproved && {
+        isApproved : isApproved
+    } || {}).populate("userId")
+
+    if(!requests) throw new ApiError(500, "Server error!!")
+
+    return res.status(200).json(new ApiResponse(200, requests, "Service requests fetched successfully!!"))
+})
+
+export const rejectServiceRequest = asyncHandler(async(req, res) => {
+
+    const {serviceId} = req.params
+
+    if(!isValidObjectId(serviceId)) throw new ApiError(400, "Invalide service id!!")
+
+        const rejected = await ServiceOwner.findByIdAndUpdate({serviceId}, {
+            $set : {
+                isApproved : "rejected"
+            }
+        },{
+            new : true
+        })
+
+    // const serviceOwner = await ServiceOwner.findByIdAndDelete(serviceId)
     
-    return res.status(200).json(new ApiResponse(200, {serviceOwner, role : existingUser.role}, "User upgraded to service owner!!"))
+    // if(!serviceOwner) throw new ApiError(500, "Server Error while removing service owner!!")
+
+    // await removeFileFromCloudinary(serviceOwner.serviceCoverImagePublicId, "image")
+
+    return res.status(200).json(new ApiResponse(200, {}, "Service rejected!!"))
 })
 
 export const updateServiceInfo = asyncHandler( async(req, res) => {
 
     const {serviceId} = req.params
+    console.log("body",req.body)
 
     if(!isValidObjectId(serviceId)) throw new ApiError(400, "Invalid service id!!")
     
-    const {serviceName, serviceInfo, serviceDestination, serviceLocationMapCoordinates} = req.body
+    const {serviceName, serviceInfo,serviceType, serviceDestination, latitude, longitude} = req.body
 
-    if(!serviceName || !serviceDestination || !serviceInfo || !serviceLocationMapCoordinates.longitude || !serviceLocationMapCoordinates.latitude) throw new ApiError(400, "Fields missing!!")
+    if(!serviceName || !serviceDestination || !serviceInfo || !longitude || !latitude) throw new ApiError(400, "Fields missing!!")
 
     const serviceOwner = await ServiceOwner.findByIdAndUpdate(serviceId, {
         $set : {
             serviceName,
             serviceInfo,
+            serviceType,
             serviceDestination,
-            serviceLocationMapCoordinates
+            serviceLocationMapCoordinates : {
+                latitude : latitude,
+                longitude : longitude
+            }
         }
     },{ new : true })
 
@@ -84,7 +158,7 @@ export const addServiceImages = asyncHandler(async(req, res) => {
 
     const localFilePath = req.files?.map(file => file.path)
 
-    if (!localFilePath.length[0]) throw new ApiError(400, "file missing!!")
+    if (!localFilePath[0]) throw new ApiError(400, "file missing!!")
     
     const serviceOwner = await ServiceOwner.findById(serviceId)
 
@@ -92,7 +166,7 @@ export const addServiceImages = asyncHandler(async(req, res) => {
     
     if(serviceOwner.serviceImages.length > 6) throw new ApiError(400, `Image upload limit exceeded i.e 5`)
     
-    const uploadImage = await uploadMultipleFileOnCloudinary(localFilePath, "image", "serviceImage")
+    const uploadImage = await uploadMultipleFileOnCloudinary(localFilePath, "image", `serviceImage/${serviceOwner.serviceName}`)
 
     if(!uploadImage) throw new ApiError(500, "Error while uploading!!")
         //NOTE : consume more time to return res, 3.36s
@@ -107,10 +181,12 @@ export const addServiceImages = asyncHandler(async(req, res) => {
     const upload = await ServiceOwner.findByIdAndUpdate(serviceId,{
         $push : {
             serviceImages : { 
-                $each : uploadImage.map(image => image.url)
-            },
-            serviceImagePublicId : {
-                $each : uploadImage.map(image => image.public_id)
+                $each : uploadImage.map(image => { 
+                        return {
+                             src : image.url,
+                             publicId : image.public_id
+                            }
+                    })
             }
         }
     }, {new : true})
@@ -124,22 +200,18 @@ export const removeServiceImage = asyncHandler( async( req, res) => {
 
     if(!isValidObjectId(serviceId)) throw new ApiError(400, "Invalid guide id!!")
 
-    const {serviceImages, serviceImagePublicId} = req.body
-
-    if(!serviceImages[0] || !serviceImagePublicId[0]) throw new ApiError(400, "Image not selected!!")
+    const {src, publicId} = req.body
+    console.log(src, publicId)
     
-    const removeImages = await removeFileFromCloudinary(serviceImagePublicId, "image")
+    if(!src || !publicId) throw new ApiError(400, "Image missing!!")
+    
+    const removeImages = await removeFileFromCloudinary(publicId, "image")
 
     if(!removeImages) throw new ApiError(500, "server error!!")
 
     const serviceOwner = await ServiceOwner.findByIdAndUpdate(serviceId,{
         $pull : {
-            serviceImages : {              //$each is used with $push 
-                $in : serviceImages     //$in is used with $pull 
-            },
-            serviceImagePublicId : {
-                $in : serviceImagePublicId
-            }
+            serviceImages : {src, publicId}           //$each is used with $push   //$in is used with $pull }
         }
     }, {new : true})
 
@@ -171,7 +243,13 @@ export const deleteServiceOwnerProfile = asyncHandler( async( req,res) => {
 
     if(!serviceOwner) throw new ApiError(500, "Server Error while removing service owner!!")
 
-    await removeFileFromCloudinary(serviceOwner.serviceImagePublicId, "image")
+    const publicIds = serviceOwner.serviceImages?.reduce((acc, image) => {
+        acc.push(image.publicId)
+    },[] )
+
+    await removeFileFromCloudinary(serviceOwner.serviceCoverImagePublicId,"image")
+
+    await removeFileFromCloudinary(publicIds, "image")
 
     const existingUser = await User.findByIdAndUpdate(req.user._id,{
         $set : {
@@ -189,9 +267,75 @@ export const getServiceProfileByUserId = asyncHandler(async(req, res) => {
 
     if(!isValidObjectId(userId)) throw new ApiError(400, "Invalid userid!!")
 
-    const serviceProfile = await ServiceOwner.findOne({userId}).populate("reviews")
+    // const serviceProfile = await ServiceOwner.findOne({userId})
+    const serviceProfile =await ServiceOwner.aggregate([
+        {
+            $match : {
+                userId : new mongoose.Types.ObjectId(userId)
+            }
+        },{
+            $lookup : {
+                from : "reviews",
+                localField : "reviews",
+                foreignField : "_id",
+                as : "reviews",
+                pipeline : [{
+                    $lookup : {
+                        from : "users",
+                        localField : "creator",
+                        foreignField : "_id",
+                        as : "creator"
+                    }
+                },{
+                    $addFields : {
+                        creator : {
+                            $first : "$creator"
+                        }
+                    }
+                }]
+            }   
+        },{
+            $addFields : {
+                avgReview : {
+                    $avg : "$reviews.rating" 
+                }
+            }
+        }
+    ])
 
     if(!serviceProfile)  throw new ApiError(404, "Service profile not found!!")
 
-    return res.status(200).json(new ApiResponse(200, serviceProfile, "Service profile fetched successfully!!"))
+    return res.status(200).json(new ApiResponse(200, serviceProfile[0] || null, "Service profile fetched successfully!!"))
+})
+
+export const updateServiceCoverImage = asyncHandler(async(req, res) => {
+
+    const {serviceId} = req.params
+
+    if(!isValidObjectId(serviceId)) throw new ApiError(400, "Invalid id!!")
+    
+    const localFilePath = req.file?.path
+
+    if(!localFilePath) throw new ApiError(400, "File missing!!")
+
+    const serviceOwner = await ServiceOwner.findById(serviceId)
+
+    if(!serviceOwner) throw new ApiError(404, "Service doesnot exists!!")
+
+    await removeFileFromCloudinary(serviceOwner.serviceCoverImagePublicId)
+
+    const uploadImage = await uploadFileOnCloudinary(localFilePath, "image", `serviceImage/${serviceOwner.serviceName}`)
+
+    if(!uploadImage) throw new ApiError(500, "Error while uploading image!!")
+
+    const updatedCoverImage = await ServiceOwner.findByIdAndUpdate(serviceId,{
+        $set : {
+            serviceCoverImage : uploadImage.url,
+            serviceCoverImagePublicId : uploadImage.public_id
+        }
+    },{ new : true})
+
+    if(!updatedCoverImage) throw new ApiError(500, "Server error")
+
+    return res.status(200).json(new ApiResponse(200, {}, "CoverImage updated successfully!!"))
 })

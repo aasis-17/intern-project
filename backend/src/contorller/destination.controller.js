@@ -2,8 +2,6 @@ import { ApiError, ApiResponse, asyncHandler } from "../utils/index.js";
 import { Destination } from "../model/destination.model.js";
 import { removeFileFromCloudinary, uploadFileOnCloudinary, uploadMultipleFileOnCloudinary } from "../utils/fileHandler.js";
 import { isValidObjectId } from "mongoose";
-import { Route } from "../model/destinationRoute.model.js";
-
 
 export const createDestination = asyncHandler( async(req, res) => {
 
@@ -191,8 +189,9 @@ export const deleteDestinationImage = asyncHandler( async(req, res) => {
 export const getDestinationById = asyncHandler(async(req,res) => {
 
     const {destinationId} = req.params
+    console.log(destinationId)
 
-    if(!destinationId) throw new ApiError(400, "Invalid id!!")
+    if(!isValidObjectId(destinationId)) throw new ApiError(400, "Invalid id!!")
 
     const destination = await Destination.findById(destinationId).populate({path :"reviews", populate :[ "comments","creator"]})
 

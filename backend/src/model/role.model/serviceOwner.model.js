@@ -11,6 +11,11 @@ const serviceOwnerSchema = new mongoose.Schema(
             required : true,
             trim : true
         },
+        serviceType : {
+            type :String,
+            enum : ["Hotel, restaurent", "Homestay"],
+            default : "Hotel"
+        },
         serviceInfo : {
             type : String,
         },
@@ -37,16 +42,24 @@ const serviceOwnerSchema = new mongoose.Schema(
             }
         },
         serviceImages : [{
-            type : String
-        }],
-        serviceImagePublicId : [{
-            type : String
+            src : {
+                type : String
+            },
+            publicId : {
+                type : String
+            }
         }],
         reviews : [{
             type : mongoose.Schema.Types.ObjectId,
             ref : "Review"
-        }]
-    }
+        }],
+
+        isApproved : {
+            type : String,
+            enum : ["pending", "approved", "rejected", "default"],
+            default : "pending"
+        }
+    },{timestamps : true}
 )
 
 export const ServiceOwner = mongoose.model("ServiceOwner", serviceOwnerSchema)

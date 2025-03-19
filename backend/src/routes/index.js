@@ -5,6 +5,7 @@ import serviceOwnerRouter from "./serviceOwner.route.js"
 import destinationRouter from "./destination.route.js"
 import reviewRouter from "./review.route.js"
 import commentRouter from "./comment.route.js"
+import nearByServiceRouter from "./nearByService.route.js"
 
 export {
     userRouter,
@@ -13,5 +14,6 @@ export {
     serviceOwnerRouter,
     destinationRouter,
     reviewRouter,
-    commentRouter
+    commentRouter,
+    nearByServiceRouter
 }

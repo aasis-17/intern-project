@@ -4,7 +4,7 @@ export const asyncHandler = (requestHandler) => {
          Promise.resolve(requestHandler(req, res, next))
          .catch((error) => {
             console.log(error)
-            return res.status(error.statusCode).json(new ApiResponse(error.statusCode, null, error.message))
+            return res.status(error.statusCode || 500).json(new ApiResponse(error.statusCode || 500, null, error.message || "error"))
          })
     }
 }
