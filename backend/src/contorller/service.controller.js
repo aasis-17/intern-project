@@ -82,16 +82,22 @@ export const approveServiceRequest = asyncHandler( async(req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, `${upgrade.fullname} has been upgraded to service!!`))
 })
 
-export const getServiceRequest = asyncHandler(async(req, res) => {
+export const getAllServices = asyncHandler(async(req, res) => {
 
-    const {isApproved} = req.query
-    console.log(isApproved)
+    const {isApproved, serviceDestination, search} = req.query
+    console.log(isApproved, serviceDestination)
+
+    const filter = {}
+
+    if(isApproved) filter.isApproved = isApproved
+    if(serviceDestination) filter.serviceDestination = serviceDestination
+    if(search) filter.serviceName = {$regex : search, $options : "i"}
+
+    console.log(filter)
 
     // if(!serviceRequest) throw new ApiError(400, "request missing!")
 
-    const requests = await ServiceOwner.find(isApproved && {
-        isApproved : isApproved
-    } || {}).populate("userId")
+    const requests = await ServiceOwner.find(filter).populate("userId")
 
     if(!requests) throw new ApiError(500, "Server error!!")
 

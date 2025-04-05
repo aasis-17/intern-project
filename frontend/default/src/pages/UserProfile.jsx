@@ -44,7 +44,8 @@ const UserProfile = () => {
     console.log(serviceDetails)
 
     useEffect(() => {
-      userDetails && serviceDetails && setImage(prev => ({...prev, userAvatar : userDetails?.userAvatar, serviceCoverImage : serviceDetails?.serviceCoverImage}))
+      // userDetails && serviceDetails && setImage(prev => ({...prev, userAvatar : userDetails?.userAvatar, serviceCoverImage : serviceDetails?.serviceCoverImage}))
+      setImage(prev => ({...prev, userAvatar : userDetails?.userAvatar, serviceCoverImage : serviceDetails?.serviceCoverImage}))
     },[isSuccess])
 
     console.log(image)
@@ -194,7 +195,7 @@ if(isLoading) return <div>Loading..</div>
     hidden     
   />
     </form>
-          {/* {userData.role !== "serviceOwner" && userData.userInfo && <p className="text-gray-600 mt-2 font-garamond text-xl">"{userData.userInfo}"</p>} */}
+          {userDetails.role !== "serviceOwner" && userDetails.userInfo && <p className="animate-fade-down text-gray-600 mt-2 font-garamond text-xl">"{userDetails.userInfo}"</p>}
         </div>
       </div>
 
@@ -214,7 +215,7 @@ if(isLoading) return <div>Loading..</div>
         {userDetails.role === "serviceOwner" && 
                     // <div key={review._id} className="bg-white px-6 mb-5 py-2 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                     <div className="flex justify-end">
-                      {[...Array(serviceDetails.avgReview? serviceDetails.avgReview.toFixed(1) : 0)].map((_, i) => (
+                      {[...Array(serviceDetails.avgReview ? serviceDetails.avgReview.toFixed(1) : 0)].map((_, i) => (
                        <span key={i} className="text-yellow-400 text-3xl">
                          ★
                        </span>

@@ -1,24 +1,32 @@
 import React, { useEffect } from 'react';
-import L from 'leaflet';
+import L, { icon } from 'leaflet';
 import { latLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import { useQueryClient } from '@tanstack/react-query';
+import { faIceCream } from '@fortawesome/free-solid-svg-icons';
+import { useParams } from 'react-router';
 
-function RouteMap({routeIndex}) {
+function RouteMap({routeIndex, mapDetails}) {
 
+  const {id} =useParams()
   const queryClient = useQueryClient()
 
-  const {destinationMapCoordinates, routePlan} = queryClient.getQueryData(["destinationId"])
+  const {destinationMapCoordinates, routePlan} = mapDetails
+
+  const services = queryClient.getQueryData(["nearByServices", id])
+
+  console.log(services)
   
-  const intermediate = routePlan[0] && destination.routePlan?.reduce((acc,curr,index) => {
-    if(destination.routePlan.length - 1 !== index) {
-      acc.push(curr.routeMapCoordinates.elocation)
-    }
-    return acc
-   },[])
- console.log(intermediate)
+//   const intermediate = routePlan[0] && routePlan?.reduce((acc,curr,index) => {
+//     if(routePlan.length - 1 !== index) {
+//       acc.push(curr.routeMapCoordinates.eLocation)
+//     }
+//     return acc
+    
+//    },[])
+//  console.log(intermediate)
 
   useEffect(() => {
 
@@ -26,22 +34,30 @@ function RouteMap({routeIndex}) {
     const map = L.map('map').setView([destinationMapCoordinates.latitude, destinationMapCoordinates.longitude], 10);
 
     L.marker(latLng(destinationMapCoordinates.latitude, destinationMapCoordinates.longitude))
+    .setIcon(icon({iconUrl :"/destination.webp", iconSize : 40}))
     .addTo(map)
 
+    services?.forEach(service => {
+      L.marker(latLng(service.serviceLocationMapCoordinates.latitude, service.serviceLocationMapCoordinates.longitude))
+      .setIcon(icon({iconUrl :"/hotel.jpg", iconSize : 40}))
+      .addTo(map)
+    })
+
     // Add a tile layer (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+    L.tileLayer("https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png")
     .addTo(map);
 
     // Define start and end points
     if(routePlan[0]){
-    const start = L.latLng(routePlan[routeIndex].sLocation.latitude, routePlan[routeIndex].sLocation.longitude); 
-    const centerRoute = intermediate?.map(route => L.latLng(route.latitude, route.longitude));
-    const end = L.latLng(routePlan[routeIndex].eLocation.latitude, routePlan[routeIndex].eLocation.longitude); 
+    const start = L.latLng(routePlan[routeIndex].routeMapCoordinates.sLocation.lat, routePlan[routeIndex].routeMapCoordinates.sLocation.lng); 
+    // const centerRoute = intermediate?.map(route => L.latLng(route.lat, route.lng));
+    const end = L.latLng(routePlan[routeIndex].routeMapCoordinates.eLocation.lat, routePlan[routeIndex].routeMapCoordinates.eLocation.lng); 
 
     // Initialize the routing control
     const control =L.Routing.control({
-      waypoints: [start,...centerRoute, end],
-      routeWhileDragging: true,
+      waypoints: [start, end],
+      routeWhileDragging: false,
+      
       router: L.Routing.osrmv1({
         serviceUrl: 'https://router.project-osrm.org/route/v1',
       }),
@@ -69,7 +85,7 @@ function RouteMap({routeIndex}) {
     return () => {
       map.remove();
     };
-  }, [routePlan]);
+  }, [routeIndex]);
 
   return <div id="map" style={{ height: '100%', width: '100%' }} />;
 

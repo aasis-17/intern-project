@@ -13,7 +13,7 @@ const serviceOwnerSchema = new mongoose.Schema(
         },
         serviceType : {
             type :String,
-            enum : ["Hotel, restaurent", "Homestay"],
+            enum : ["Hotel", "Restaurent", "Homestay"],
             default : "Hotel"
         },
         serviceInfo : {

@@ -234,8 +234,6 @@ export const getAllDestination = asyncHandler(async(req, res) => {
     console.log(filter)
     console.log(page)
 
-    // const destinations = await Destination.find()
-
     const destinations = await Destination.aggregate([{
 
         $match : filter

@@ -6,7 +6,7 @@ const AdminPage = () => {
     const navChilds = [
         {name : "Dashboard", link : "/admin"},
         {name : "Destination", link : "/admin/destination"},
-        {name : "Requests", link : "/admin/request"}
+        {name : "Services", link : "/admin/services"}
     ]
   return (
     <div className="flex h-screen bg-gray-100">

@@ -32,23 +32,26 @@ import Requests from './pages/admin/Requests.jsx';
 import RequestDetail from './components/layouts/admin/RequestDetail.jsx';
 import Error from './pages/Error.jsx';
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools"
+import authService from './services/authServices.js';
+import AdminServices from './pages/admin/AdminServices.jsx';
+import Service from "./pages/signup/Service.jsx"
+import ServiceDetails from './pages/admin/ServiceDetails.jsx';
 
 function App() {
-  // const queryClient = new QueryClient()
+
   const [isLoading, setIsLoading] = useState(true)
   const {dispatch} = useContext(AuthContext)
   const navigate = useNavigate()
 
   const getCurrentUser = async() =>{
-
     try {
       const res = await userService.getCurrentUser()
+      await authService.refreshAccessToken()
       dispatch({type : "login", payload : res})
-      if(res.status >= 400 ) dispatch({type : "logout"})
     } catch (error) {
+  console.log(error)
        dispatch({type : "logout"})
        navigate("/")
-       console.log(error)
     }finally{
       setIsLoading(false)
     }
@@ -96,24 +99,24 @@ function App() {
             <Route path='destination' element={<AdminDestinations />}/>
 
             <Route path='upload' element={<DestinationUpload />}/>
-
+            
             <Route path='upload/:destinationId' element={<Editlayout />}>
             <Route index element={<DestinationUpload />} />
             <Route path='route' element={<RouteUpload />} />
             <Route path="photoUpload" element={<PhotoUpload />} />
             </Route>
 
-            <Route path='request' element={<Requests />} />
+            <Route path='services' element={<AdminServices />} />
+            <Route path="uploadService" element={<Service option="admin" />} />
+            <Route path="uploadService/:serviceId" element={<ServiceDetails  />} />
 
+            <Route path='request' element={<Requests />} />
             <Route path='request/:id' element={<RequestDetail />} />
 
             </Route>
     
       </Routes>
     </Container>
-  //  <ReactQueryDevtools initialIsOpen={false}/> 
-
-    // </QueryClientProvider>
 
 
   )

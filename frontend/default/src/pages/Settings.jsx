@@ -12,12 +12,12 @@ const Settings = () => {
   const [view, setView] = useState(false)
   const {state} = useContext(AuthContext)
   console.log(state)
+
   const {data : serviceDetails, isLoading, isError, error} = useQuery({
     queryKey : ["serviceDetails"],
     queryFn :() => {
      return serviceOwnerService.getServiceProfileByUserId(state.userData._id)
     }
-
   })
 
   if(isLoading) <div>Loading..</div>
@@ -110,10 +110,10 @@ const Settings = () => {
                      variant='outline' />
                     </div>
 
-                  {serviceDetails && serviceDetails?.isApproved === "true" && view &&(
+                  {serviceDetails && serviceDetails?.isApproved === "pending" && view &&(
                     <div className='mt-5 bg-white'>
                     {isError && <div>{error.message}</div>}
-                      <ServiceOwner option="edit" />
+                      <ServiceOwner details={serviceDetails} option="edit" />
                     </div>
                   ) }
                   </div>

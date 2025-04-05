@@ -26,6 +26,7 @@ const Destination = () => {
   const {data, isError, error, isLoading} = useQuery({
     queryKey :["destinations", filter.search, filter.region],
     queryFn : () => destinationService.getDestination(filter.search, filter.region),
+    staleTime : 2 * 60000
   })
 
   const destinations = data?.destinations
@@ -70,7 +71,7 @@ const Destination = () => {
       </div>
           <div className='text-4xl font-garamond font-medium mb-7'>Destinations </div>
       {/* Destination Cards Grid */}
-      <div>
+      <div className='animate-fade-down animate-delay-200 animate-ease-out'>
         {isLoading ? <div>Loading...</div> : 
         destinations[0] ? destinations.map((destination) => (
           <DestinationCard

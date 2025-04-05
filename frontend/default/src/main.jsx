@@ -11,15 +11,24 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 ReactDOM.createPortal(<Modal />, document.getElementById("modal-root"))
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // default: true
+    },
+  },
+})
+
 
 createRoot(document.getElementById('root')).render(
   <QueryClientProvider client={queryClient}>
-  <BrowserRouter>
     <AuthProvider>
+      <BrowserRouter>
+    
         <App />
+   
+      </BrowserRouter>
     </AuthProvider>
-  </BrowserRouter>
   <ReactQueryDevtools initialIsOpen={false}/>
   </QueryClientProvider>
 )

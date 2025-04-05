@@ -44,6 +44,16 @@ class authServices {
             throw error.response.data.message
         }
     }
+
+    async refreshAccessToken(){
+        try {
+            const res = await axios.post("/api/v1/auth/refresh")
+            console.log(res.data)
+            return res.data.data
+        } catch (error) {
+            throw error.response.data
+        }
+    }
 }
 
 const authService = new authServices()

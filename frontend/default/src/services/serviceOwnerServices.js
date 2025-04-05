@@ -9,6 +9,7 @@ class serviceOwnerServices {
     async getServiceProfile(serviceId){
         try {
             const res = await axios.get(`/api/v1/serviceOwner/${serviceId}`)
+            console.log(res.data)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -17,7 +18,7 @@ class serviceOwnerServices {
 
     async getServiceProfileByUserId(userId){
         try {
-            const res = await axios.get(`${this.uri}/${userId}`)
+            const res = await axios.get(`${this.uri}/byUserId/${userId}`)
             console.log(res.data)
             return res.data.data
         } catch (error) {
@@ -34,14 +35,14 @@ class serviceOwnerServices {
         }
     }
 
-    async getServiceRequest (option=""){
+    async getAllServices (search="",option="", serviceDestination=""){
         console.log(option)
         try {
-            const res = await axios.get(`${this.uri}?isApproved=${option}`)
+            const res = await axios.get(`${this.uri}?search=${search}&isApproved=${option}&serviceDestination=${serviceDestination}`)
             console.log(res.data)
             return res.data.data
         } catch (error) {
-            return error.response.data
+            throw error.response.data
         }
     }
 
@@ -50,7 +51,7 @@ class serviceOwnerServices {
             const res = await axios.post(`${this.uri}/approve/${userId}`)
             return res.data.data
         } catch (error) {
-            return error.response.data
+            throw error.response.data
         }
     }
 
@@ -59,7 +60,7 @@ class serviceOwnerServices {
             const res = await axios.delete(`${this.uri}/reject/${serviceId}`)
             return res.data.data
         } catch (error) {
-            return error.response.data
+            throw error.response.data
         }
     }
 

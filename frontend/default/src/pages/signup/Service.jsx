@@ -14,15 +14,18 @@ import serviceOwnerService from '../../services/serviceOwnerServices.js';
 import { AuthContext } from '../../store/authContext.jsx';
 import PhotoUpload from '../../components/layouts/admin/PhotoUpload.jsx';
 
-const ServiceOwner = ({option}) => {
+const ServiceOwner = ({option, details : serviceDetails}) => {
     const [visible, setVisible] = useState(() => option !== "edit" )
     const [btnVisible, setBtnVisible] = useState(false)
     const [imagePreview, setImagePreview] = useState("")
 
     const {state} = useContext(AuthContext)
-    const queryClient = useQueryClient()
-    const serviceDetails = queryClient.getQueryData(["serviceDetails"])
+
+    // const queryClient = useQueryClient()
+    // const serviceDetails = queryClient.getQueryData(["serviceDetails"])
+
     console.log(serviceDetails)
+
     const navigate = useNavigate()
 
     const [mapState, setMapState] = useState({
@@ -31,15 +34,16 @@ const ServiceOwner = ({option}) => {
         region : serviceDetails?.serviceDestination || ""
     })
 
+
     const {data, isSuccess}= useQuery({
-      queryKey : ["destination"],
+      queryKey : ["destinations"],
       queryFn :  () => {
         return  destinationService.getDestination()
       }
     })
 
 
-    const locations = isSuccess ? data.destinations?.map(destination => {
+    let locations = isSuccess ? data.destinations?.map(destination => {
       return {name : destination.destinationName,_id : destination._id, latLng : {lat : destination.destinationMapCoordinates.latitude, lng :destination.destinationMapCoordinates.longitude}}
     }) : []
      console.log( locations)
@@ -61,8 +65,8 @@ const ServiceOwner = ({option}) => {
 
     const handleChange = (e)=>{  
       setMapState(prev => ({...prev, region : e.target.value}))
-      locations?.filter((province) => {
-        return province.name === e.target.value && setMapState(prev => ({...prev, province : province.latLng}))
+      locations?.forEach((province) => {
+         province.name === e.target.value && setMapState(prev => ({...prev, province : province.latLng}))
       })
     }
     const mutation = useMutation({
@@ -106,12 +110,12 @@ const ServiceOwner = ({option}) => {
 
       }
     })
- 
+
    return(
    <div className=' flex-1'>
-    {btnVisible ? (<PhotoUpload option="service" setBtnVisible={setBtnVisible} />) 
+    {btnVisible ? (<PhotoUpload details={serviceDetails} option="service" setBtnVisible={setBtnVisible} />) 
     : (
-         <form onSubmit={ handleSubmit(mutation.mutateAsync) } className=" h-full  flex flex-col justify-evenly ml-4">
+         <form onSubmit={ handleSubmit(mutation.mutateAsync) } className=" h-full  flex flex-col justify-evenly">
           <div className='flex justify-between'>
                 <div className='text-4xl font-garamond font-medium mb-3'>{option ==="edit" ? "Service Details" : "Details"}</div>
               <div className='flex gap-5 p-2'>
@@ -197,7 +201,7 @@ const ServiceOwner = ({option}) => {
               Service type :
             </label>
             <select
-              defaultValue=""
+              defaultValue={serviceDetails && serviceDetails.serviceType}
               onChange={handleChange}
               required
               className="w-full mt-1 px-4 py-2 border rounded-md focus:ring focus:ring-blue-300"
@@ -269,11 +273,11 @@ const ServiceOwner = ({option}) => {
           </div>
           
           {/* Submit Button */}
-          {visible  && option === "edit" && (
+          {visible   && (
           <Button
           type="submit"
           className='w-full my-3'
-         children= {`${option === "edit" ? "Save" :"Create Page as Service " }`}
+         children= {`${option === "edit" && "Save" || option ==="admin" && "Add service" || "Create Page as Service " }`}
         />
           
           )}

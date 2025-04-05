@@ -21,11 +21,11 @@ const RouteLocate = ({
         setMapState(prev=>({...prev, position : e.latlng}))     
     }) 
 
-          map.flyTo(latLng(mapState.province.lat, mapState.province.lng), map.getZoom(5))
+          map.flyTo(latLng(mapState.province.lat, mapState.province.lng), map.getZoom(15))
 
           return mapState.position ==="" ? null : (
             <Marker position={mapState.position}>
-              <Popup>{state?.destinationName}</Popup>
+              {/* <Popup>{state?.destinationName}</Popup> */}
             </Marker>)
   }else{
 

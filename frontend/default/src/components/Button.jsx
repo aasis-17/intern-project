@@ -53,7 +53,7 @@ const Button = ({
   
   Button.propTypes = {
     type: PropTypes.oneOf(['button', 'submit', 'reset']),
-    variant: PropTypes.oneOf(['primary', 'secondary', 'delete']),
+    variant: PropTypes.oneOf(['primary', 'outline', 'delete']),
     size: PropTypes.oneOf(['sm', 'md', 'lg']),
     onClick: PropTypes.func,
     disabled: PropTypes.bool,

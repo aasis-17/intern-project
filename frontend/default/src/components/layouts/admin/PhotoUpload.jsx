@@ -6,12 +6,12 @@ import { useNavigate, useOutletContext } from 'react-router'
 import destinationService from '../../../services/destinationService'
 import serviceOwnerService from '../../../services/serviceOwnerServices'
 
-const PhotoUpload = ({option, setBtnVisible}) => {
+const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
     const state = useOutletContext()
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
-    const serviceDetails = queryClient.getQueryData(["serviceDetails"])
+
     const [imagePreview, setImagePreview] = useState(0)
     const [images, setImages] = useState(option === "service" ? [...serviceDetails.serviceImages] : [...state.destinationImages] || [])
     

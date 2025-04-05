@@ -9,7 +9,7 @@ const Requests = () => {
 
     const {data : requests, isLoading, error} = useQuery({
         queryKey : ["requests"],
-        queryFn : () => serviceOwnerService.getServiceRequest("pending")
+        queryFn : () => serviceOwnerService.getAllServices("pending")
     })
     console.log(requests)
     if(isLoading) return <div>Loading..</div>
@@ -36,13 +36,12 @@ const Requests = () => {
          </p>
        </div>
  
-       {/* Buttons for Approve and Reject */}
         <div className="mt-6 flex space-x-4">
          <Button
          children="Review"
          size='sm'
-         variant='secondary'
-         onClick={() => navigate("/admin/requestDetail",{state : request})}
+         variant='outline'
+         onClick={() => navigate(`/admin/request/${request._id}`)}
          />
 
        </div> 

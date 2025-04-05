@@ -12,19 +12,20 @@ const RequestDetail = () => {
   const navigate = useNavigate()
 
   const {data : serviceDetails, isLoading} = useQuery({
-    queryKey : "serviceDetails",
+    queryKey : ["serviceDetails"],
     queryFn : () => {
-      serviceOwnerService.getServiceProfile(id)
+      return serviceOwnerService.getServiceProfile(id)
     }
   })
+  console.log(id,serviceDetails)
 
   const mutation = useMutation({
     mutationFn : async(submit) => {
       console.log(submit)
-      if(submit === "approve"){
-        await serviceOwnerService.approveServiceRequest(state.userId._id)
+      if(submit === "approved"){
+        await serviceOwnerService.approveServiceRequest(serviceDetails.userId)
       }else{
-        await serviceOwnerService.rejectServiceRequest(state._id)
+        await serviceOwnerService.rejectServiceRequest(serviceDetails._id)
       }
       return submit
     },
@@ -41,16 +42,16 @@ const RequestDetail = () => {
 
   if(isLoading) return <div>Loading..</div>
   return (
-    <div className='flex-1 py-5'>
+    <div className='flex-1 h-screen'>
       <NearByServices />
 
    {/* Buttons for Approve and Reject */}
-   <div className="mt-6 flex space-x-4 w-full ">
+   <div className="flex space-x-4 w-full ">
          <Button
          children="Approve"
          variant='secondary'
          className='w-1/2'
-         onClick={() => mutation.mutateAsync("approve")}
+         onClick={() => mutation.mutateAsync("approved")}
          />
 
          <Button

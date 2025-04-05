@@ -104,7 +104,7 @@ const Header = ({}) => {
               <FontAwesomeIcon onClick={() => setSetting(prev => !prev)} className={`relative cursor-pointer ${pathname === "/" ? "text-white" : "text-black"} h-5`} icon={faGear} />
               <div className='' onClick={() => navigate(`/${state.userData._id}`)}>
                 {state.userData.userAvatar ? 
-                <img alt='' className='w-8 h-8 rounded-full object-cover' src={state.userData.userAvatar}/>
+                <img alt='' className='w-8 h-8 rounded-full object-cover cursor-pointer' src={state.userData.userAvatar}/>
                 :
                 <FontAwesomeIcon  className={`cursor-pointer ${pathname === "/" ? "text-white" : "text-black"} h-6`} icon={faCircleUser} />
               }   
@@ -114,10 +114,10 @@ const Header = ({}) => {
           )}
 
 
-  <div className={`${!setting && "hidden"} absolute right-5 z-10 mt-10 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden`} >
-    <div className="py-1" >
-      <span className="hover:bg-gray-100 block px-4 py-2 text-sm text-gray-700 cursor-pointer" onClick ={() => {setSetting(false),navigate("/settings")}}  >Setting</span>
-      <span className="hover:bg-gray-100 block px-4 py-2 text-sm text-gray-700 cursor-pointer" onClick ={() => {setSetting(false),handleLogout()}}>Logout</span>
+  <div className={`${!setting && "hidden"} animate-fade-down absolute right-5 z-10 mt-10 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white ring-1 shadow-lg ring-black/5 focus:outline-hidden`} >
+    <div className="py-1 text-lg text-gray-900" >
+      <span className="hover:bg-gray-100 block px-4 py-2 cursor-pointer" onClick ={() => {setSetting(false),navigate("/settings")}}  >Setting</span>
+      <span className="hover:bg-gray-100 block px-4 py-2 cursor-pointer" onClick ={() => {setSetting(false),handleLogout()}}>Logout</span>
     </div>
 
   </div>
