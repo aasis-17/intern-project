@@ -1,18 +1,35 @@
 import InputField from "../../components/fields/InputField";
 import {useForm} from "react-hook-form"
+import { useLoginUserMutation } from "../../services/authApi";
+import { setCredentials, setUserData } from "../../store/authSlice";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
 
 export default function SignIn() {
 
   const {register, handleSubmit} = useForm()
+  const {authStatus} = useSelector((state) => state.auth)
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
 
-  const handleLogin = (data) =>{
-    console.log(data)
+  const [login,{data, isLoading, error, isError, isSuccess}] = useLoginUserMutation()
+   console.log("signup", error, isError)
+
+  isError && alert(error?.data?.message)
+  isSuccess && (
+     dispatch(setCredentials(data?.data)),
+     dispatch(setUserData(data?.data?.user)),
+     navigate("admin"))
+
+  if(authStatus){
+    return <Navigate to="admin" replace />
   }
 
   return (
     <div className="bg-gray-50  flex h-full w-full items-center justify-center px-2 md:mx-0 md:px-0 lg:items-center">
       {/* Sign in section */}
-      <form onSubmit={handleSubmit(handleLogin)} className="shadow-xl p-4 rounded-lg mt-[10vh] w-full max-w-full flex-col items-center md:pl-4  xl:max-w-[420px]">
+      <form onSubmit={handleSubmit(login)} className="shadow-xl p-4 rounded-lg mt-[10vh] w-full max-w-full flex-col items-center md:pl-4  xl:max-w-[420px]">
         <h4 className="mb-2.5 text-4xl font-bold text-navy-700 dark:text-white">
           Sign In
         </h4>

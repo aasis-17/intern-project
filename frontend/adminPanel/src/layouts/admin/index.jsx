@@ -56,6 +56,7 @@ export default function Admin(props) {
     });
   };
 
+
   document.documentElement.dir = "ltr";
   return (
     <div className="flex h-full w-full">

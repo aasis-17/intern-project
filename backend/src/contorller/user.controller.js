@@ -62,7 +62,7 @@ export const getCurrentUser = asyncHandler(async(req, res) => {
 
     if(!isValidObjectId(_id)) throw new ApiError(400, "Invalid userId!!")
 
-    const user = await User.findById(_id).select("-password ")
+    const user = await User.findById(_id).select("-password -refreshToken ")
 
     if(!user) throw new ApiError(404, "User not found!!")
 

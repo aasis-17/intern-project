@@ -3,11 +3,15 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 
 import App from "./App";
+import { Provider } from "react-redux";
+import store from "./store/store";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
+  <Provider store={store}>
+    <BrowserRouter future={{ v7_startTransition: true }}>
+      <App />
+    </BrowserRouter>
+  </Provider>
 );

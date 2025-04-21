@@ -1,7 +1,7 @@
 import React from "react";
 import Dropdown from "../dropdown";
 import { FiAlignJustify } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import navbarimage from "../../assets/img/layout/Navbar.png";
 import { BsArrowBarUp } from "react-icons/bs";
 import { FiSearch } from "react-icons/fi";
@@ -11,10 +11,19 @@ import {
   IoMdInformationCircleOutline,
 } from "react-icons/io";
 import avatar from "../../assets/img/avatars/avatar4.png";
+import { useLogoutUserMutation } from "../../services/authApi";
+import { useDispatch } from "react-redux";
+import { logoutUser } from "../../store/authSlice";
+// import { useNavigate } from "react-router-dom";
 
 const Navbar = (props) => {
   const { onOpenSidenav, brandText } = props;
   const [darkmode, setDarkmode] = React.useState(false);
+  const dispatch = useDispatch()
+  const [logout, {isError, isLoading, isSuccess}] = useLogoutUserMutation()
+  const navigate = useNavigate()
+
+  isSuccess && (navigate("/"), dispatch(logoutUser()))
 
   return (
     <nav className="sticky top-4 z-40 flex flex-row flex-wrap items-center justify-between rounded-xl bg-white/10 p-2 backdrop-blur-xl dark:bg-[#0b14374d]">
@@ -207,12 +216,12 @@ const Navbar = (props) => {
           classNames={"py-2 top-8 -left-[180px] w-max"}
         /> */}
 
-                <a
-                  href=" "
+                <button
+                  onClick={logout}
                   className=" text-lg  font-medium bg-red-400 px-4 py-2  rounded-3xl text-white hover:bg-red-500 transition duration-150 ease-out hover:ease-in"
                 >
                   Log Out
-                </a>
+                </button>
       </div>
     </nav>
   );

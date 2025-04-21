@@ -49,15 +49,15 @@ export const login = asyncHandler( async (req, res) => {
 
     if(!email || !password) throw new ApiError(400, "Email or password missing!!")
     
-    const userExists = await User.findOne({email})
+    const userDetails = await User.findOne({email})
 
-    if(!userExists) throw new ApiError(400, "User doesnot exists!!")
+    if(!userDetails) throw new ApiError(400, "User doesnot exists!!")
 
-    const isPasswordCorrect =  await userExists.verifyPassword(password)
+    const isPasswordCorrect =  await userDetails.verifyPassword(password)
 
     if(!isPasswordCorrect) throw new ApiError(400, "Invalid password!!")
 
-    const {accessToken, refreshToken} = await generateTokens(userExists)
+    const {accessToken, refreshToken} = await generateTokens(userDetails)
 
     if(!accessToken || !refreshToken) throw new ApiError(500, "Error while creating token!!")
 
@@ -66,11 +66,21 @@ export const login = asyncHandler( async (req, res) => {
         secure : true,
         sameSite : "none"
     }
+    console.log(userDetails)
+    const user = Object.keys(userDetails).reduce((acc, field)=>{
+        if(!["password", "refreshToken"].includes(field)){
+            acc[field] = userDetails[field]
+        }
+        return acc
+},{})
+
+    console.log(user)
 
     return res.status(200)
-    .cookie("accessToken", accessToken, options)
+    //.cookie("accessToken", accessToken, options) 
+    // // if you want to handle access token from server side without client intervention using this it automatically set cookies in server side
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, {userExists,accessToken, refreshToken}, "User login Successfully!!"))
+    .json(new ApiResponse(200, { user, accessToken, refreshToken}, "User login Successfully!!"))
 })
 
 export const logout = asyncHandler(async (req, res) => {
@@ -90,7 +100,7 @@ export const logout = asyncHandler(async (req, res) => {
     req.user = null
     
     return res.status(200)
-    .clearCookie("accessToken", options)
+    // .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logged out Successfully!!"))
 })
@@ -100,7 +110,7 @@ export const refreshAccessToken = asyncHandler(async(req, res) =>{
     const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken
 
     if(!incomingRefreshToken){
-        throw new ApiError(400, "unauthorized request!!")
+        throw new ApiError(401, "unauthorized request!!")
     }
 
     const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
@@ -128,7 +138,7 @@ export const refreshAccessToken = asyncHandler(async(req, res) =>{
     }
 
     return res.status(200)
-    .cookie("accessToken", accessToken, options)
+    // .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
     .json(new ApiResponse(
         200, {
