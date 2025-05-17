@@ -7,7 +7,7 @@ import AuthLayout from "./layouts/auth";
 import SignIn from "./views/auth/SignIn";
 import { useDispatch } from "react-redux";
 import { setUserData } from "./store/authSlice";
-import { useGetCurrentUserQuery } from "./services/userApiSlice";
+import { useGetCurrentUserQuery } from "./services/apiSlice";
 const App = () => {
   
   const dispatch = useDispatch()

@@ -49,15 +49,15 @@ export const login = asyncHandler( async (req, res) => {
 
     if(!email || !password) throw new ApiError(400, "Email or password missing!!")
     
-    const userDetails = await User.findOne({email})
+    const user = await User.findOne({email})
 
-    if(!userDetails) throw new ApiError(400, "User doesnot exists!!")
+    if(!user) throw new ApiError(400, "User doesnot exists!!")
 
-    const isPasswordCorrect =  await userDetails.verifyPassword(password)
+    const isPasswordCorrect =  await user.verifyPassword(password)
 
     if(!isPasswordCorrect) throw new ApiError(400, "Invalid password!!")
 
-    const {accessToken, refreshToken} = await generateTokens(userDetails)
+    const {accessToken, refreshToken} = await generateTokens(user)
 
     if(!accessToken || !refreshToken) throw new ApiError(500, "Error while creating token!!")
 
@@ -66,15 +66,15 @@ export const login = asyncHandler( async (req, res) => {
         secure : true,
         sameSite : "none"
     }
-    console.log(userDetails)
-    const user = Object.keys(userDetails).reduce((acc, field)=>{
-        if(!["password", "refreshToken"].includes(field)){
-            acc[field] = userDetails[field]
-        }
-        return acc
-},{})
+    // console.log(userDetails)
+    // const user = Object.keys(userDetails).reduce((acc, field)=>{
+    //     if(!["password", "refreshToken"].includes(field)){
+    //         acc[field] = userDetails[field]
+    //     }
+    //     return acc
+// },{})
 
-    console.log(user)
+    // console.log(user)
 
     return res.status(200)
     //.cookie("accessToken", accessToken, options) 

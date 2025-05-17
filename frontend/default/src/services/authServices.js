@@ -15,7 +15,8 @@ class authServices {
     async login(password, email){
         try {
             const res = await axios.post("/api/v1/auth/", {password, email})
-            return res.data.data.userExists
+            console.log(res)
+            return res.data.data.user
         } catch (error) {
             throw error.response.data
         }

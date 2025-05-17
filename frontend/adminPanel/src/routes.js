@@ -1,4 +1,4 @@
-import React from "react";
+
 
 // Admin Imports
 import MainDashboard from "./views/admin/default";
@@ -20,6 +20,13 @@ import {
   MdOutlineSignpost,
   MdSettings,
 } from "react-icons/md";
+import Destination from "./views/admin/destinations";
+import DestinationUpload from "./views/admin/destinations/components/DestinationUpload";
+import DestinationLayout from "./layouts/destination";
+import RouteUpload from "./views/admin/destinations/components/RouteUpload";
+import PhotoUpload from "./views/admin/destinations/components/PhotoUpload";
+import Layout from "./views/admin/destinations/components/Layout";
+import AdminServices from "./views/admin/service/AdminServices";
 
 const routes = [
   {
@@ -30,11 +37,39 @@ const routes = [
     component: <MainDashboard />,
   },
   {
-    name: "Destinations",
+    name: "Destination",
     layout: "/admin",
     path: "destinations",
     icon: <MdOutlineSignpost className="h-6 w-6" />,
-    component: <NFTMarketplace />,
+    component: <DestinationLayout />,
+    children : [{
+      path : "destinations",
+      component : <Destination />
+    },
+    {
+      path : "destinations/:id",
+      // component : <DestinationUpload edit={true} />
+      component : <Layout />,
+      children : [
+        {
+          component : <DestinationUpload edit={true} />,
+          index : true
+        },
+        {
+          path : "destinations/:id/route",
+          component : <RouteUpload />
+        },
+        {
+          path : "destinations/:id/photoUpload",
+          component : <PhotoUpload />
+        },
+      ]
+    },
+
+    {
+      path : "destinations/upload",
+      component : <DestinationUpload />
+    }],
     secondary: true,
   },
   {
@@ -42,7 +77,7 @@ const routes = [
     layout: "/admin",
     icon: <MdBarChart className="h-6 w-6" />,
     path: "data-tables",
-    component: <DataTables />,
+    component: <AdminServices />,
   },
   {
     name: "Users",

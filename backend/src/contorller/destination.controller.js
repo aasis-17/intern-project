@@ -1,7 +1,7 @@
 import { ApiError, ApiResponse, asyncHandler } from "../utils/index.js";
 import { Destination } from "../model/destination.model.js";
 import { removeFileFromCloudinary, uploadFileOnCloudinary, uploadMultipleFileOnCloudinary } from "../utils/fileHandler.js";
-import { isValidObjectId } from "mongoose";
+import { isValidObjectId, ObjectId } from "mongoose";
 
 export const createDestination = asyncHandler( async(req, res) => {
 
@@ -49,6 +49,7 @@ export const updateDestination = asyncHandler( async (req, res) => {
     if(!isValidObjectId(destinationId)) throw new ApiError(400, "Invalid id!!")
 
     const {destinationName, destinationInfo, destinationTips, latitude, longitude} = req.body
+    console.log(req.body)
 
     if(!destinationInfo || !destinationTips || !destinationName || !longitude || !latitude){
         throw new ApiError(400, "Field missing!!")
@@ -58,7 +59,7 @@ export const updateDestination = asyncHandler( async (req, res) => {
 
     if(!destination) throw new ApiError(404, "Destination not found!!")
 
-    const localFileCoverPath = req.file.destinationCoverImage[0]?.path
+    const localFileCoverPath = req.file?.destinationCoverImage[0]?.path
     console.log(localFileCoverPath)
 
     let uploadCoverImage;
@@ -298,4 +299,37 @@ export const addRoutePlan = asyncHandler(async(req, res) => {
     if(!destination) throw new ApiError(500, "serverError")
 
     return res.status(200).json(new ApiResponse(200, destination, "RoutePlan added successfully!!"))
+})
+
+export const removeRoutePlan = asyncHandler(async(req, res) =>{
+    const {destinationId} = req.params
+
+    if(!isValidObjectId(destinationId)) throw new ApiError(400,"Invalid id!")
+
+    const {routeId} = req.body
+    console.log(req.body)
+
+    if(!routeId) throw new ApiError(400, "Route id missing!!")
+
+    const destination = await Destination.findByIdAndUpdate(destinationId,{
+        $pull :{
+            routePlan : {_id : routeId}
+        }
+    },{new:true})
+    console.log(destination)
+   
+    if(!destination) throw new ApiError(404, "Destination not found!!")
+
+    return res.status(200).json(new ApiResponse(200, destination, "Route removed successfully!!"))
+    
+})
+
+export const getAllDestinationName = asyncHandler(async(_, res) => {
+
+    const destinationNames = await Destination.find().select("destinationName")
+
+    if(!destinationNames) return new ApiError(500, "server error!!")
+        console.log(destinationNames)
+
+    return res.status(200).json(new ApiResponse(200, destinationNames, "Destination names fetched successsfully!!"))
 })

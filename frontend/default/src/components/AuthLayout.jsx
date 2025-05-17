@@ -8,6 +8,7 @@ function PageProtector({children, authentication = true}) {
   
     const navigate = useNavigate()
     const {state, dispatch} = useContext(AuthContext)
+    console.log(state)
 
     useEffect(() => {
         if(authentication && state.isAuthenticated !== authentication){

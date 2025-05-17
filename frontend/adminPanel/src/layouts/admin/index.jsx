@@ -28,8 +28,8 @@ export default function Admin(props) {
           routes[i].layout + "/" + routes[i].path
         ) !== -1
       ) {
-        setCurrentRoute(routes[i].name);
-      }
+          setCurrentRoute(routes[i].name);
+        }
     }
     return activeRoute;
   };
@@ -47,7 +47,35 @@ export default function Admin(props) {
   const getRoutes = (routes) => {
     return routes.map((prop, key) => {
       if (prop.layout === "/admin") {
+        if(prop.secondary){
+          return(
+            <Route path={`/${prop.path}`} element={prop.component} key={key} >
+              {prop.children.map((child, key) => {
+                if(child.hasOwnProperty("children")){
+
+                return (
+                  <Route path={`/${child.path}`} element={child.component} key={key}>
+                    {child.children.map((subChild, key) =>(
+                      subChild.index ? 
+                      <Route index element={subChild.component} key={key} />
+                     :
+                        <Route path={`/${subChild.path}`} element={subChild.component} key={key} />
+                      ))}
+                  </Route>
+                )
+                } else{
+                  return(
+                  <Route path={`/${child.path}`} element={child.component} key={key}/>
+                  )
+                }
+              }
+            )} 
+                      
+            </Route>
+          )
+        }else
         return (
+          
           <Route path={`/${prop.path}`} element={prop.component} key={key} />
         );
       } else {
@@ -80,7 +108,7 @@ export default function Admin(props) {
               <Routes>
                 {getRoutes(routes)}
 
-                <Route
+               <Route
                   path="/"
                   element={<Navigate to="/admin/default" replace />}
                 />
