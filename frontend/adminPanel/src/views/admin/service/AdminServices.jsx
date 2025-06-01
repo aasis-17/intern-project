@@ -16,19 +16,12 @@ const AdminServices = () => {
     })
       const {data : services, isLoading, isError, error} = useGetServicesQuery(filter)
 
-      console.log(filter.search)
+      console.log('adminservices', services)
 
       const {data} = useGetAllDestinationNameQuery()
-    // const {data } = useQuery({
-    //     queryKey :["destinations"],
-    //     queryFn : () => destinationService.getDestination(),
-    //   })
-      const destinations = data?.data
 
-    // const {data : services, isError, error, isLoading} = useQuery({
-    //     queryKey :["services", filter.search, filter.option, filter.serviceDestination],
-    //     queryFn : () => serviceOwnerService.getAllServices(filter.search, filter.option, filter.serviceDestination),
-    //   })
+      const destinations = data?.data
+      console.log(destinations)
     
       // const deleteMutation = useMutation({
       //   mutationFn : (serviceId) => serviceOwnerService(serviceId),
@@ -48,7 +41,7 @@ const AdminServices = () => {
      
       <div className='flex justify-between'>
           <div className='text-4xl font-garamond font-medium mb-3'>Services </div>
-            <Button onClick={()=> navigate(`/admin/uploadService`)} variant='outline'  className='mb-3' children="Add Service" />
+            <Button onClick={()=> navigate(`/admin/service/upload`,{state:filter})}  variant='outline'  className='mb-3' children="Add Service" />
             </div>
 
  {/* Search and Filter Section */}
@@ -123,7 +116,7 @@ const AdminServices = () => {
           <div className='mr-5 '>
             <Button 
               onClick={() =>{
-                navigate(`/admin/uploadService/${service._id}`)
+                navigate(`/admin/service/${service._id}`, {state :filter} )
                 }}
               children="Review" 
               variant='outline'

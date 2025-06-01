@@ -48,13 +48,14 @@ export default function Admin(props) {
     return routes.map((prop, key) => {
       if (prop.layout === "/admin") {
         if(prop.secondary){
+          
           return(
             <Route path={`/${prop.path}`} element={prop.component} key={key} >
               {prop.children.map((child, key) => {
                 if(child.hasOwnProperty("children")){
 
                 return (
-                  <Route path={`/${child.path}`} element={child.component} key={key}>
+                  <Route index={child.index || false} path={`/${child.path}`} element={child.component} key={key}>
                     {child.children.map((subChild, key) =>(
                       subChild.index ? 
                       <Route index element={subChild.component} key={key} />
@@ -65,7 +66,7 @@ export default function Admin(props) {
                 )
                 } else{
                   return(
-                  <Route path={`/${child.path}`} element={child.component} key={key}/>
+                  <Route index={child?.index} path={`/${child.path}`} element={child.component} key={key}/>
                   )
                 }
               }

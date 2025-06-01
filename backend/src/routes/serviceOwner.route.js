@@ -8,7 +8,7 @@ const router = Router()
 
 router.route("/")
 .get(getAllServices)
-.post(upload.single("serviceCoverImage", 1), verifyJWT,accessToRole(["user"]),  upgradeToService)
+.post(upload.single("serviceCoverImage", 1), verifyJWT, accessToRole(["user", "admin"]),  upgradeToService)
 
 router.route("/byUserId/:userId").get(verifyJWT, getServiceProfileByUserId)
 
@@ -21,10 +21,10 @@ router.route("/approve/:userId").post(verifyJWT, approveServiceRequest)
 
 router.route("/:serviceId")
 .get(verifyJWT,  getServiceProfile)
-.patch(verifyJWT,accessToRole(["serviceOwner"]),  updateServiceInfo)
-.put( upload.array("serviceImages", 5), verifyJWT,accessToRole(["serviceOwner"]),  addServiceImages)
-.post(verifyJWT,accessToRole(["serviceOwner"]),  removeServiceImage)
-.delete(verifyJWT,accessToRole(["serviceOwner"]),  deleteServiceOwnerProfile)
+.patch(verifyJWT,accessToRole(["serviceOwner", "admin"]),  updateServiceInfo)
+.put( upload.array("serviceImages", 5), verifyJWT,accessToRole(["serviceOwner", "admin"]),  addServiceImages)
+.post(verifyJWT,accessToRole(["serviceOwner", "admin"]),  removeServiceImage)
+.delete(verifyJWT,accessToRole(["serviceOwner", "admin"]),  deleteServiceOwnerProfile)
 
 
 export default router

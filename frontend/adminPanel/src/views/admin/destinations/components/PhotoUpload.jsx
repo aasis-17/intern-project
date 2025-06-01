@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import FormField from '../../../../components/fields/FormField'
 import Button from '../../../../components/button/Button'
 import { useNavigate, useOutletContext } from 'react-router'
-import { useRemoveDestinationPhotoMutation, useUploadDestinationPhotoMutation } from '../../../../services/apiSlice'
+import { useRemoveDestinationPhotoMutation, useUploadDestinationPhotoMutation, useUploadServiceImageMutation, useRemoveServicePhotoMutation } from '../../../../services/apiSlice'
 
 const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
     const state = useOutletContext()
@@ -24,89 +24,55 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
          reader.readAsDataURL(file);
        } 
       }
-      const [deleteMutation, {isError : deleteError, isSuccess : deleteSuccess }] = useRemoveDestinationPhotoMutation()
+      const [addDestinationImages, { isSuccess : isDestinationImageSuccess, isLoading, isError : isDestinationImageError}] = useUploadDestinationPhotoMutation()
+      const [addServiceImages, {isSuccess : isServiceImageSuccess, isError : isServiceImageError}] = useUploadServiceImageMutation()
+
+      const [removeDestinationImage, {isError : isDestinationImageDeletedError, isSuccess : isDestinationImageDeletedSuccess }] = useRemoveDestinationPhotoMutation()
+      const [removeServiceImage, {isError : isServiceImageDeletedError, isSuccess : isServiceImageDeletedSuccess}] = useRemoveServicePhotoMutation()
 
       const handlePhotoDelete = async (image)=> {
             if(option === "service"){
-                if(!image.hasOwnProperty("publicId")) return
-                // await (serviceDetails._id, image)
+                if(image.hasOwnProperty("publicId")) await removeServiceImage({serviceId : serviceDetails._id, data : image})
+                
             } else{
-                if(image.hasOwnProperty("publicId")){
-                    console.log(images)
-                   await deleteMutation({data : image, destinationId : state._id})
-                }
-            }
-
+                if(image.hasOwnProperty("publicId")) await removeDestinationImage({data : image, destinationId : state._id})
+                   
+            }  
             setImages(prev => prev.filter((img) => img.src !== image.src))
         }
       
-    //     mutationFn :async (image) => {  
-    //         if(option === "service"){
-    //             if(!image.hasOwnProperty("publicId")) return
-    //             await serviceOwnerService.deleteServiceImage(serviceDetails._id, image)
-    //         } else{
-    //             if(image.hasOwnProperty("publicId")){
-    //                 console.log(images)
-    //                await destinationService.deleteDestinationImage(image, state._id)
-    //             }
-    //         }
-
-    //         setImages(prev => prev.filter((img) => img.src !== image.src))
-    //     },
-    //     onSuccess : () => {
-    //         alert("Image deleted successfully!!")
-    //     },
-    //     onError : () =>{
-    //         alert("Error while deleting image!!")
-    //     }
-    //   })
-
-      const [mutation, { isSuccess, isLoading, isError}] = useUploadDestinationPhotoMutation()
-
         const handlePhotoUpload = async() => {
              const formData = new FormData()
             if(option !== "service"){
                 images.forEach(image => {
                     if(image.hasOwnProperty("file")) formData.append("destinationImages", image.file)
                 })  
-                await mutation({data : formData, destinationId :state._id})   
+                await addDestinationImages({data : formData, destinationId :state._id})   
             }else{
                 images.forEach(image => {
                     if(image.hasOwnProperty("file")) formData.append("serviceImages", image.file)
                 })  
-                await mutation(formData, serviceDetails._id)   
+                await addServiceImages({data : formData, serviceId : serviceDetails._id})   
             }         
-
         }
-    //     mutationFn :async () => {
-    //         const formData = new FormData()
-    //         if(option !== "service"){
-    //             images.forEach(image => {
-    //                 if(image.hasOwnProperty("file")) formData.append("destinationImages", image.file)
-    //             })  
-    //             await destinationService.addDestinationImages(formData, state._id)   
-    //         }else{
-    //             images.forEach(image => {
-    //                 if(image.hasOwnProperty("file")) formData.append("serviceImages", image.file)
-    //             })  
-    //             await serviceOwnerService.addServiceImages(formData, serviceDetails._id)   
-    //         }
-
-    //     },
-    //     onSuccess : () => {
-    //         alert(`Images added successfully!!`)
-    //     },
-    //     onError : () => {
-    //         alert("Error while uploading Images!!")
-    //     }
-    //   })
 
     useEffect(() => {
-      isError && alert(`Photo upload error!!`)
-      deleteError && alert(`Photo delete error!!`)
-      isSuccess && alert(`photo uploaded successfully!!`)
-      deleteSuccess && alert(`Photot deleted successfully!!`)
-    },[isError, deleteError, isSuccess, deleteSuccess])
+      isDestinationImageError && alert(`Destination Photo upload error!!`)
+      isDestinationImageDeletedError && alert(`Destination Photo delete error!!`)
+      isDestinationImageSuccess && alert(`Destination photo uploaded successfully!!`)
+      isDestinationImageDeletedSuccess && alert(`Destination Photo deleted successfully!!`)
+      isServiceImageDeletedError && alert("Service photo delete error!!")
+      isServiceImageDeletedSuccess && alert("service photo deleted successfully!!")
+      isServiceImageError && alert("Service photo upload error!!")
+      isServiceImageSuccess && alert ("Service photo uploaded successfully!!")
+    },[isDestinationImageDeletedError, 
+        isDestinationImageDeletedSuccess,
+        isDestinationImageError, 
+        isDestinationImageSuccess,
+        isServiceImageDeletedError,
+        isServiceImageDeletedSuccess,
+        isServiceImageError,
+        isServiceImageSuccess])
 
   return (
     <div className=' h-full'>

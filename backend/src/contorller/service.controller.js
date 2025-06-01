@@ -84,12 +84,12 @@ export const approveServiceRequest = asyncHandler( async(req, res) => {
 
 export const getAllServices = asyncHandler(async(req, res) => {
 
-    const {isApproved, serviceDestination, search} = req.query
-    console.log(isApproved, serviceDestination)
+    const {option, serviceDestination, search} = req.query
+    console.log(option, serviceDestination)
 
     const filter = {}
 
-    if(isApproved) filter.isApproved = isApproved
+    if(option) filter.isApproved = option
     if(serviceDestination) filter.serviceDestination = serviceDestination
     if(search) filter.serviceName = {$regex : search, $options : "i"}
 
@@ -257,13 +257,18 @@ export const deleteServiceOwnerProfile = asyncHandler( async( req,res) => {
 
     await removeFileFromCloudinary(publicIds, "image")
 
-    const existingUser = await User.findByIdAndUpdate(req.user._id,{
+    if(serviceOwner.isApproved === "default"){
+        return res.status(200).json(new ApiResponse(200, serviceOwner, "Service removed successfully!!"))
+    }else{
+   const existingUser = await User.findByIdAndUpdate(req.user._id,{
         $set : {
             role : "user"
         }
     }, {new : true}) 
 
     return res.status(200).json(new ApiResponse(200, {serviceOwner, role : existingUser.role}, "service owner account deleted successfully!!"))
+    }
+
     
 })
 

@@ -74,13 +74,20 @@ export const login = asyncHandler( async (req, res) => {
     //     return acc
 // },{})
 
-    // console.log(user)
+    console.log(!user.role === "admin")
 
+    if(user?.role === "admin"){ return res.status(200)
+         //.cookie("accessToken", accessToken, options) 
+         // if you want to handle access token from server side without client intervention using this it automatically set cookies in server side
+        .cookie("refreshToken", refreshToken, options)
+        .json(new ApiResponse(200, { user, accessToken, refreshToken}, "Admin login Successfully!!")) 
+
+    }else{
     return res.status(200)
-    //.cookie("accessToken", accessToken, options) 
-    // // if you want to handle access token from server side without client intervention using this it automatically set cookies in server side
+    .cookie("accessToken", accessToken, options) 
     .cookie("refreshToken", refreshToken, options)
     .json(new ApiResponse(200, { user, accessToken, refreshToken}, "User login Successfully!!"))
+    }
 })
 
 export const logout = asyncHandler(async (req, res) => {
@@ -100,7 +107,7 @@ export const logout = asyncHandler(async (req, res) => {
     req.user = null
     
     return res.status(200)
-    // .clearCookie("accessToken", options)
+    .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logged out Successfully!!"))
 })

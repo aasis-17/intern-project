@@ -20,7 +20,7 @@ const RouteLocate = ({
         map.on("click", function(e) {
         setMapState(prev=>({...prev, position : e.latlng}))     
     }) 
-          map.flyTo(latLng(mapState.province.lat, mapState.province.lng), map.getZoom(7))
+          map.flyTo(latLng(mapState.province.lat, mapState.province.lng), map.getZoom(10))
 
           return mapState.position ==="" ? null : (
             <Marker position={mapState.position}>

@@ -46,12 +46,20 @@ function App() {
   const getCurrentUser = async() =>{
     try {
       const res = await userService.getCurrentUser()
-      await authService.refreshAccessToken()
+      const refresh = await authService.refreshAccessToken()
       dispatch({type : "login", payload : res})
+      
     } catch (error) {
-  console.log(error)
-       dispatch({type : "logout"})
-       navigate("/")
+       console.log(error)
+       try {
+        await authService.logout()
+        dispatch({type : "logout"})
+        navigate("/")
+        
+       } catch (error) {
+        console.log(error)
+       }
+       
     }finally{
       setIsLoading(false)
     }

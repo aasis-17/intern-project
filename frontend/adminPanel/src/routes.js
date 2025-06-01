@@ -6,6 +6,7 @@ import NFTMarketplace from "./views/admin/destinations";
 import Profile from "./views/admin/profile";
 import DataTables from "./views/admin/tables";
 import RTLDefault from "./views/rtl/default";
+import Setting from "./views/admin/setting/index"
 
 // Auth Imports
 import SignIn from "./views/auth/SignIn";
@@ -27,6 +28,8 @@ import RouteUpload from "./views/admin/destinations/components/RouteUpload";
 import PhotoUpload from "./views/admin/destinations/components/PhotoUpload";
 import Layout from "./views/admin/destinations/components/Layout";
 import AdminServices from "./views/admin/service/AdminServices";
+import ServiceDetails from "./views/admin/service/ServiceDetails";
+import ServiceOwner from "./views/admin/service/component/Service";
 
 const routes = [
   {
@@ -48,7 +51,6 @@ const routes = [
     },
     {
       path : "destinations/:id",
-      // component : <DestinationUpload edit={true} />
       component : <Layout />,
       children : [
         {
@@ -76,8 +78,23 @@ const routes = [
     name: "Services",
     layout: "/admin",
     icon: <MdBarChart className="h-6 w-6" />,
-    path: "data-tables",
-    component: <AdminServices />,
+    path: "service",
+    component: <DestinationLayout />,
+    secondary : true,
+    children : [{
+      path : 'service',
+      component : <AdminServices />,
+      index : true
+    },
+    {
+      path : 'service/:serviceId',
+      component : <ServiceDetails />
+    },
+        {
+      path : 'service/upload',
+      component : <ServiceOwner option="upload" />
+    }
+    ]
   },
   {
     name: "Users",
@@ -88,10 +105,10 @@ const routes = [
   },
   {
     name: "Setting",
-    layout: "/auth",
-    path: "sign-in",
+    layout: "/admin",
+    path: "setting",
     icon: <MdSettings className="h-6 w-6" />,
-    component: <SignIn />,
+    component: <Setting />,
   },
   // {
   //   name: "RTL Admin",

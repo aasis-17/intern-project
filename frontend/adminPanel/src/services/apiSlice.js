@@ -41,7 +41,7 @@ const baseQueryWithReAuth = async(args, api, extraOption) => {
 export const apiSlice = createApi({
     reducerPath : "apiSlice",
     baseQuery : baseQueryWithReAuth,
-    tagTypes : ["Destination"],
+    tagTypes : ["Destination", "Service"],
 
     endpoints : (builder) => ({
         getCurrentUser : builder.query ({
@@ -105,21 +105,22 @@ export const apiSlice = createApi({
                     method : "DELETE"
                 }
             },
-            async onQueryStarted({ destination, filter }, { dispatch, queryFulfilled }) {
-                try {
-                  const data = await queryFulfilled
-                  dispatch(
-                    apiSlice.util.updateQueryData('getDestinations', filter, (draft) => {
-                        const array = draft.destinations.filter(post => post._id !== destination._id)
-                        draft.destinations = array
-                    console.log(JSON.parse(JSON.stringify(draft)),"draft")
-                    })
+            invalidatesTags : (result, error, {id}) => [{type : "Destination", id}]
+            // async onQueryStarted({ destination, filter }, { dispatch, queryFulfilled }) {
+            //     try {
+            //       const data = await queryFulfilled
+            //       dispatch(
+            //         apiSlice.util.updateQueryData('getDestinations', filter, (draft) => {
+            //             const array = draft.destinations.filter(post => post._id !== destination._id)
+            //             draft.destinations = array
+            //         console.log(JSON.parse(JSON.stringify(draft)),"draft")
+            //         })
                   
-                  )
-                } catch(error) {
-                    console.log("error while deleting destination",error)
-                }
-              },
+            //       )
+            //     } catch(error) {
+            //         console.log("error while deleting destination",error)
+            //     }
+            //   },
         }),
 
         uploadDestination : builder.mutation({
@@ -130,17 +131,18 @@ export const apiSlice = createApi({
                     body : data
                 }
             },
-            async onQueryStarted({ state }, { dispatch, queryFulfilled }) {
-                try {
-                  const { data: createdPost } = await queryFulfilled
-                  console.log(createdPost)
-                   dispatch(
-                    apiSlice.util.updateQueryData('getDestinations', state,(draft) =>{
-                        draft.destinations.push(createdPost.data)
-                    }),
-                  )
-                } catch(error) {console.log(error)}
-              },
+            invalidatesTags : (result, error, {id}) => [{type : "Destination", id}]
+            // async onQueryStarted({ state }, { dispatch, queryFulfilled }) {
+            //     try {
+            //       const { data: createdPost } = await queryFulfilled
+            //       console.log(createdPost)
+            //        dispatch(
+            //         apiSlice.util.updateQueryData('getDestinations', state,(draft) =>{
+            //             draft.destinations.push(createdPost.data)
+            //         }),
+            //       )
+            //     } catch(error) {console.log(error)}
+            //   },
         
         }),
 
@@ -153,22 +155,22 @@ export const apiSlice = createApi({
                     body : data
                 }
             },
-            // invalidatesTags: (result, error, { id }) => [{ type: "Destination", id }], // this refetches 
+            invalidatesTags: (result, error, { id }) => [{ type: "Destination", id }], // this refetches 
             async onQueryStarted({id, state}, { dispatch, queryFulfilled }) {
                 console.log(state)
                 try {
                   const { data: updatedDestination } = await queryFulfilled
                  
-                    dispatch(
-                    apiSlice.util.updateQueryData('getDestinations',  state,
-                      (draft) => {
-                        const index = draft.destinations.findIndex(item => item._id === id);
-                        if (index !== -1) {
-                          draft.destinations[index] = updatedDestination.data;
-                        }
-                }),
-                  )
-                            // Update individual destination cache
+                //     dispatch(
+                //     apiSlice.util.updateQueryData('getDestinations',  state,
+                //       (draft) => {
+                //         const index = draft.destinations.findIndex(item => item._id === id);
+                //         if (index !== -1) {
+                //           draft.destinations[index] = updatedDestination.data;
+                //         }
+                // }),
+                //   )
+            // Update individual destination cache
           dispatch(
             apiSlice.util.updateQueryData(
               'getDestinationById', 
@@ -243,7 +245,6 @@ export const apiSlice = createApi({
                     console.log(data)
                     dispatch(apiSlice.util.updateQueryData("getDestinationById",destinationId, (draft) => {
                         Object.assign(draft, data.data)
-                        console.log(JSON.parse(JSON.stringify(draft)))
                     }))
                 } catch (error) {
                     console.log(error)
@@ -265,7 +266,7 @@ export const apiSlice = createApi({
                    console.log(data)
                    dispatch(apiSlice.util.updateQueryData("getDestinationById", destinationId,(draft) => {
                     Object.assign(draft, data.data)
-                    console.log(JSON.parse(JSON.stringify(draft)))
+                
                    })) 
                 }catch(error){
                     console.log(error)
@@ -275,7 +276,6 @@ export const apiSlice = createApi({
 
         getServices : builder.query({
             query({search="", option="",serviceDestination=""}){
-                console.log(search)
                 return {
                     url : `serviceOwner`,
                     params : {
@@ -300,7 +300,7 @@ export const apiSlice = createApi({
         }),
 
         getServiceById : builder.query({
-            query({serviceId}){
+            query(serviceId){
                 return {
                     url : `serviceOwner/${serviceId}`
                 }
@@ -309,12 +309,193 @@ export const apiSlice = createApi({
             transformResponse : (res) => {
                 return res.data
             }
+        }),
+
+        updateServiceData : builder.mutation({
+            query({serviceId, formData}){
+                console.log(formData)
+                return{
+                    url : `serviceOwner/${serviceId}`,
+                    method : "PATCH",
+                    body : formData
+                    
+                }
+            },
+            invalidatesTags :  (result, error, { id }) => [{ type: "Service", id }],
+            async onQueryStarted({serviceId, filter},{dispatch, queryFulfilled}){
+            //     console.log(serviceId,"filter")
+                try {
+                    const {data} = await queryFulfilled
+            //         console.log(data)
+            //         dispatch(apiSlice.util.updateQueryData("getServices", filter, (draft) =>{
+            //             const index = draft.findIndex(service => service._id === serviceId )
+            //             if (index !== -1) {
+            //               draft[index] = data.data;
+            //             }
+            //         }))
+
+                    dispatch(apiSlice.util.updateQueryData('getServiceById', serviceId, 
+                        
+                        (draft) => {   
+                        Object.assign(draft, data.data)
+                        console.log(JSON.parse(JSON.stringify(draft)))
+                        }
+                    
+                ))
+                } catch (error) {
+                    console.log(error)
+                }
+            }
+        }),
+
+        upgradeToService : builder.mutation({
+            query({formData}){
+                return{
+                    url : `serviceOwner`,
+                    method : "POST",
+                    body : formData
+                }
+            },
+            invalidatesTags : (result, error, {id}) => [{type : "Service", id}]
+            // async onQueryStarted({filter},{dispatch, queryFulfilled}){
+            //     console.log("filter", filter)
+            //     try {
+            //         const {data} = await queryFulfilled
+            //         console.log(data)
+            //         dispatch(apiSlice.util.updateQueryData('getServices', filter, (draft) => {
+            //             draft.push(data.data)
+            //             console.log(JSON.parse(JSON.stringify(draft)))
+            //             return draft
+            //         }))
+            //     } catch (error) {
+            //         console.log(error)
+            //     }
+            // }
+        }),
+
+        approveService : builder.mutation({
+            query({userId}){
+                return{
+                    url : `serviceOwner/approve/${userId}`,
+                    method : "POST"
+                }
+            },
+            async onQueryStarted({serviceId}, {dispatch, queryFulfilled}){
+                try {
+                    const {data} = await queryFulfilled
+                    console.log(data)
+                    dispatch(apiSlice.util.updateQueryData("getServiceById", serviceId, (draft) => {
+                        Object.assign(draft, data.data)
+                        console.log(JSON.parse(JSON.stringify(draft)))
+                    }))
+                } catch (error) {
+                    console.log(error)      
+                }
+            }
+        }),
+
+        rejectService : builder.mutation({
+            query(serviceId){
+                return{
+                    url : `serviceOwner/reject/${serviceId}`,
+                    method : "DELETE"
+                }
+            },
+            async onQueryStarted({ serviceId}, {dispatch, queryFulfilled}){
+                try {
+                    const {data} = await queryFulfilled
+                    console.log(data)
+                    dispatch(apiSlice.util.updateQueryData("getServiceById", serviceId, (draft) => {
+                        Object.assign(draft, data.data)
+                        console.log(JSON.parse(JSON.stringify(draft)))
+                    }))
+                } catch (error) {
+                    console.log(error)      
+                }
+            }
+        }),
+
+        removeService : builder.mutation({
+            query({serviceId}){
+                return{
+                    url : `serviceOwner/${serviceId}`,
+                    method : "DELETE"
+                }
+            },
+            invalidatesTags : (result, error, {id}) => [{type : "Service", id}]
+            // async onQueryStarted({serviceId, filter}, {dispatch, queryFulfilled}){
+            //     try {
+            //         const {data} = await queryFulfilled
+            //         console.log(serviceId, filter, "filter")
+            //         dispatch(apiSlice.util.updateQueryData("getServices", filter, (draft) => {
+            //             // Object.assign(draft, data.data)
+            //             draft = draft.filter((service) => service._id !== serviceId )
+            //             console.log(JSON.parse(JSON.stringify(draft)))
+            //             return draft
+            //         }))
+            //     } catch (error) {
+            //         console.log(error)      
+            //     }
+            // }
+        }),
+
+        uploadServiceImage : builder.mutation({
+            query({serviceId, data}){
+                return{
+                    url : `serviceOwner/${serviceId}`,
+                    method : "PUT",
+                    body : data
+                }
+            },
+            async onQueryStarted({serviceId}, {dispatch, queryFulfilled}){
+                try {
+                    const {data} = await queryFulfilled
+                    console.log(data)
+                    dispatch(apiSlice.util.updateQueryData("getServiceById" ,serviceId, (draft) => {
+                        Object.assign(draft, data.data)
+                    }))
+                } catch (error) {
+                    console.log(error)
+                }
+            }
+        }),
+
+        removeServicePhoto : builder.mutation({
+            query({serviceId, data}){
+                return{
+                    url : `serviceOwner/${serviceId}`,
+                    method : "POST",
+                    body : data
+                }
+            },
+            async onQueryStarted({serviceId}, {dispatch, queryFulfilled}){
+                try{
+                    const {data}= await queryFulfilled
+                    console.log(data)
+                    dispatch(apiSlice.util.updateQueryData("getServiceById", serviceId, (draft) =>{
+                        Object.assign(draft, data.data)
+                    }))
+                }catch(error){
+                    console.log(error)
+                }
+            }
+        }),
+
+        changePassword : builder.mutation({
+            query(data){
+                return {
+                    url :"auth",
+                    method : "PATCH",
+                    body : data
+                }
+            }
         })
 
     })
 })
 
 export const {useGetCurrentUserQuery,
+    useChangePasswordMutation,
     useUploadDestinationMutation,
     useUpdateDestinationMutation,
     useGetDestinationsQuery, 
@@ -326,5 +507,12 @@ export const {useGetCurrentUserQuery,
     useRemoveDestinationPhotoMutation,
     useGetServiceByIdQuery,
     useGetServicesQuery,
-    useGetAllDestinationNameQuery
+    useGetAllDestinationNameQuery,
+    useUpdateServiceDataMutation,
+    useUpgradeToServiceMutation,
+    useApproveServiceMutation,
+    useRejectServiceMutation,
+    useRemoveServiceMutation,
+    useUploadServiceImageMutation,
+    useRemoveServicePhotoMutation
     } = apiSlice

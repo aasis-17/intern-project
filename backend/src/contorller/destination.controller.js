@@ -326,7 +326,7 @@ export const removeRoutePlan = asyncHandler(async(req, res) =>{
 
 export const getAllDestinationName = asyncHandler(async(_, res) => {
 
-    const destinationNames = await Destination.find().select("destinationName")
+    const destinationNames = await Destination.find().select("destinationName destinationMapCoordinates")
 
     if(!destinationNames) return new ApiError(500, "server error!!")
         console.log(destinationNames)

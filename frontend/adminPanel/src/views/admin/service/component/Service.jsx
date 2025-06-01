@@ -1,30 +1,25 @@
 import React, { useContext } from 'react'
-import { useState } from "react";
-import FormField from '../../components/form/FormField.jsx';
+import { useState, useEffect } from "react";
+import FormField from '../../../../components/fields/FormField.jsx';
 import { useForm } from "react-hook-form"
-import RouteLocate from '../../components/map/MapRouting.jsx';
-import { useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
-import TextField from '../../components/form/TextField.jsx';
-import Map from '../../components/map/Map.jsx';
-import { useNavigate} from 'react-router';
+import RouteLocate from '../../../../components/map/MapRouting.jsx';
+import TextField from '../../../../components/fields/TextFieldcustom.jsx';
+import Map from '../../../../components/map/Map.jsx';
+import { useLocation, useNavigate} from 'react-router';
 import { latLng } from 'leaflet';
-import Button from '../../components/Button.jsx';
-import destinationService from '../../services/destinationService.js';
-import serviceOwnerService from '../../services/serviceOwnerServices.js';
-import { AuthContext } from '../../store/authContext.jsx';
-import PhotoUpload from '../../components/layouts/admin/PhotoUpload.jsx';
+import Button from '../../../../components/button/Button.jsx';
+import PhotoUpload from '../../destinations/components/PhotoUpload.jsx';
+import { useGetAllDestinationNameQuery, useRemoveServiceMutation, useUpdateServiceDataMutation, useUpgradeToServiceMutation } from '../../../../services/apiSlice.js';
 
-const ServiceOwner = ({option, details : serviceDetails}) => {
+const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
     const [visible, setVisible] = useState(() => option !== "edit" )
     const [btnVisible, setBtnVisible] = useState(false)
     const [imagePreview, setImagePreview] = useState("")
 
-    const {state} = useContext(AuthContext)
+    const {state}= useLocation()
 
-    const queryClient = useQueryClient()
-    // const serviceDetails = queryClient.getQueryData(["serviceDetails"])
-
-    console.log(serviceDetails)
+    console.log(state)
+    const filter = option === "edit" ? filterState : state
 
     const navigate = useNavigate()
 
@@ -34,16 +29,12 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
         region : serviceDetails?.serviceDestination || ""
     })
 
+    const {data, isSuccess, isLoading} = useGetAllDestinationNameQuery()
+    console.log(data)
 
-    const {data, isSuccess}= useQuery({
-      queryKey : ["destinations"],
-      queryFn :  () => {
-        return  destinationService.getDestination()
-      }
-    })
+    const [removeService, {isSuccess : removeSuccess, isError : removeError}] = useRemoveServiceMutation()
 
-
-    let locations = isSuccess ? data.destinations?.map(destination => {
+    let locations = isSuccess ? data.data.map(destination => {
       return {name : destination.destinationName,_id : destination._id, latLng : {lat : destination.destinationMapCoordinates.latitude, lng :destination.destinationMapCoordinates.longitude}}
     }) : []
      console.log( locations)
@@ -69,8 +60,11 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
          province.name === e.target.value && setMapState(prev => ({...prev, province : province.latLng}))
       })
     }
-    const mutation = useMutation({
-      mutationFn :  async(data) => {
+    const [upgrade, { isError, isSuccess:upgradingSuccess}] = useUpgradeToServiceMutation()
+
+    const [update, { isError : updateError, isSuccess : updateSuccess}] = useUpdateServiceDataMutation()
+
+    const mutation =  async(data) => {
         const formData = new FormData()
 
         Object.keys(data).forEach((key) => {
@@ -80,42 +74,36 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
                 formData.append(key, data[key])
             }
         })
+
         formData.append("latitude",mapState.position.lat)
         formData.append("longitude", mapState.position.lng)
-        formData.append("serviceDestination",mapState.region )
-        if(option === "edit"){
-          console.log(formData)
-          await serviceOwnerService.updateServiceInfo( formData, serviceDetails._id)
-        }else{
-          await serviceOwnerService.upgradeToServiceOwner(formData)
-        }    
-      },
-      onSuccess : () => {
-        if(option === "edit"){
-          alert(`Service info updated successfully!!`)
-          setVisible(false)
-        }else{
-          alert(`Service request send successfully!!`) 
-          navigate(-1)
-          reset()         
-        }
-        queryClient.invalidateQueries({queryKey : ["serviceOwner"]})
-      },
-      onError : (error) => {
-        if(option==="edit"){
-          alert("Error while  updating service info!!",error)
-        }else{
-          alert("Error while  signing user as service !!",error)
-        }
+        formData.append("serviceDestination",mapState.region)
 
+        if(option === "edit"){
+          console.log(formData.get("serviceDestination"))
+          const datas = {...data, serviceDestination : mapState.region, latitude : mapState.position.lat, longitude :mapState.position.lng }
+           await update({serviceId:serviceDetails._id, formData : datas, filter})
+        }else{
+           await upgrade({ formData, filter})
+        }    
       }
-    })
+
+      useEffect(()=>{
+        isError && alert(`service upgrade error!!`)
+        updateError && alert(`service update eror!!`)
+        upgradingSuccess && alert(`service upgrade successfully!!`)
+        updateSuccess && alert(`service updated successfully!!`)
+        removeSuccess && alert(`service deleted successfully!!`)
+        removeError && alert(`service error while removing!!`)
+      },[isError, upgradingSuccess, updateError, updateSuccess, removeSuccess, removeError])
+
+      if(isLoading) return <div>Loading..</div>
 
    return(
    <div className=' flex-1'>
     {btnVisible ? (<PhotoUpload details={serviceDetails} option="service" setBtnVisible={setBtnVisible} />) 
     : (
-         <form onSubmit={ handleSubmit(mutation.mutateAsync) } className=" h-full  flex flex-col justify-evenly">
+         <form onSubmit={ handleSubmit(mutation) } className=" h-full  flex flex-col justify-evenly">
           <div className='flex justify-between'>
                 <div className='text-4xl font-garamond font-medium mb-3'>{option ==="edit" ? "Service Details" : "Details"}</div>
               <div className='flex gap-5 p-2'>
@@ -127,6 +115,7 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
                   className={`${visible ? "" : "hidden"}`}
                   variant='outline'
                   />  }
+                  
 
                   {option ==="edit" && (
                           <Button
@@ -141,13 +130,13 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
           </div>
 
           {/* map preview */}
-          <div className='h-48 w-full'>
+          <div className='h-48 w-full z-0'>
               <Map 
                 children={
                   <RouteLocate 
                   mapState={mapState}
                   setMapState={setMapState}
-                  state={state}
+                  // state={state}
                   path='upload'
                   option={option}
                   />}
@@ -172,11 +161,11 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
               onInput={(e) => handlePreview(e)}
               className="w-full hidden"
               labelClassName="block text-lg font-medium  text-center text-gray-600"
-              {...register("serviceCoverImage", {required : true})}
+              {...register("serviceCoverImage")}
             />
           </div>
           </div>
-            )}
+             )}
 
           <div className= "w-full mb-5">
           {/* serviceName */}
@@ -206,11 +195,12 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
               required
               className="w-full mt-1 px-4 py-2 border rounded-md focus:ring focus:ring-blue-300"
               disabled={!visible}
+               {...register("serviceType",{required : true})}
             >
               <option value="">Select service type..</option>
               <option value="Hotel">Hotel</option>
               <option value="Restaurent">Restaurent</option>
-              <option value="HomeStay">Home Stay</option>
+              <option value="Homestay">Home Stay</option>
             </select>
           </div>
 
@@ -220,7 +210,7 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
               Service Located :
             </label>
             <select
-            defaultValue={mapState.region}
+              defaultValue={mapState.region}
               onChange={handleChange}
               required
               className="w-full mt-1 px-4 py-2 border rounded-md focus:ring focus:ring-blue-300"
@@ -236,7 +226,7 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
           {/* service located coordinates preview */}
           <div className=''>
             <FormField
-              defaultValue={mapState.position}
+              // defaultValue={mapState.position}
               label="Service Located Map Coordinates :"
               value={mapState.position}
               readOnly={true}
@@ -274,11 +264,20 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
           
           {/* Submit Button */}
           {visible   && (
+            <>
           <Button
           type="submit"
           className='w-full my-3'
          children= {`${option === "edit" && "Save" || option ==="admin" && "Add service" || "Create Page as Service " }`}
         />
+          {option === "edit" && (
+          <Button
+            children="Delete service"
+            onClick={()=> removeService({serviceId : serviceDetails._id, filter})}
+            size='sm'
+            variant= "delete" 
+          /> )} 
+       </>
           
           )}
 
