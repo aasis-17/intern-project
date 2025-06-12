@@ -6,6 +6,7 @@ import destinationRouter from "./destination.route.js"
 import reviewRouter from "./review.route.js"
 import commentRouter from "./comment.route.js"
 import nearByServiceRouter from "./nearByService.route.js"
+import dashboardRouter from "./dashboard.route.js"
 
 export {
     userRouter,
@@ -15,5 +16,5 @@ export {
     destinationRouter,
     reviewRouter,
     commentRouter,
-    nearByServiceRouter
+    nearByServiceRouter, dashboardRouter
 }

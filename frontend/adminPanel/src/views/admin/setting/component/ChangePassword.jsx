@@ -24,25 +24,6 @@ const ChangePassword = () => {
       useEffect(()=>{
         isSuccess && alert("Password changed successfully!!")
       },[isSuccess])
-      // const mutation = useMutation({
-      //   mutationFn : async(formData) => {
-      //     if(formData.newPassword === formData.confirmPassword){
-      //       await authService.updatePassword(formData)
-      //       console.log( "validate",formData)
-      //     }else{
-      //       throw "Password does not match!!"
-      //     }
-      //     console.log(formData)
-          
-      //   },
-      //   onSuccess : () => {
-      //     alert("Password changed successfully!!")
-      //     reset()
-      //   },
-      //   onError : () => {
-      //     alert("Error while updating data!!" )
-      //   }
-      // })
     
       const {register, handleSubmit, reset} = useForm()
 

@@ -15,8 +15,13 @@ import DailyTraffic from "./components/DailyTraffic";
 import TaskCard from "./components/TaskCard";
 import tableDataCheck from "./variables/tableDataCheck.json";
 import tableDataComplex from "./variables/tableDataComplex.json";
+import { useTotalCountQuery } from "../../../services/apiSlice";
 
 const Dashboard = () => {
+
+  const {data, isLoading, isError} = useTotalCountQuery()
+  console.log(data)
+  if(isLoading) return<div>Loading..</div>
   return (
     <div>
       {/* Card widget */}
@@ -25,12 +30,12 @@ const Dashboard = () => {
         <Widget
           icon={<MdBarChart className="h-7 w-7" />}
           title={"Destinations"}
-          subtitle={"$340.5"}
+          subtitle={data.totalDestinationCount}
         />
         <Widget
           icon={<IoDocuments className="h-6 w-6" />}
           title={"Services"}
-          subtitle={"$642.39"}
+          subtitle={data.totalServiceCount}
         />
         {/* <Widget
           icon={<MdBarChart className="h-7 w-7" />}
@@ -42,23 +47,25 @@ const Dashboard = () => {
           title={"Your Balance"}
           subtitle={"$1,000"}
         /> */}
-        {/* <Widget
+         {/* <Widget
           icon={<MdBarChart className="h-7 w-7" />}
           title={"New Tasks"}
           subtitle={"145"}
-        />
+        /> */}
         <Widget
           icon={<IoMdHome className="h-6 w-6" />}
-          title={"Total Projects"}
-          subtitle={"$2433"}
-        /> */}
+          title={"Total Users"}
+          subtitle={data.totalUserCount}
+        /> 
       </div>
 
       {/* Charts */}
 
       <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-        <TotalSpent />
-        <WeeklyRevenue />
+        {/* <TotalSpent /> */}
+         {/* <WeeklyRevenue /> */}
+         
+         <PieChartCard data = {data} />
       </div>
 
       {/* Tables & Charts */}
@@ -66,30 +73,30 @@ const Dashboard = () => {
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
         {/* Check Table */}
         <div>
-          <CheckTable
+          {/* <CheckTable
             columnsData={columnsDataCheck}
             tableData={tableDataCheck}
-          />
+          /> */}
         </div>
 
         {/* Traffic chart & Pie Chart */}
 
         <div className="grid grid-cols-1 gap-5 rounded-[20px] md:grid-cols-2">
           <DailyTraffic />
-          <PieChartCard />
+          
         </div>
 
         {/* Complex Table , Task & Calendar */}
 
-        <ComplexTable
+        {/* <ComplexTable
           columnsData={columnsDataComplex}
           tableData={tableDataComplex}
-        />
+        /> */}
 
         {/* Task chart & Calendar */}
 
         <div className="grid grid-cols-1 gap-5 rounded-[20px] md:grid-cols-2">
-          <TaskCard />
+          {/* <TaskCard /> */}
           <div className="grid grid-cols-1 rounded-[20px]">
             <MiniCalendar />
           </div>

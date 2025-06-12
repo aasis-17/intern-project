@@ -489,12 +489,52 @@ export const apiSlice = createApi({
                     body : data
                 }
             }
+        }),
+
+        totalCount : builder.query({
+            query(){
+                return {
+                    url : "dashboard",
+                    method : "GET"
+                }
+            },
+            transformResponse : (res) => res.data
+        }),
+
+        totalUserCount : builder.mutation({
+            query({role="", gender="", address=""}){
+                return {
+                    url : `dashboard/user`,
+                    method : "GET",
+                    params : {
+                        role,
+                        gender, 
+                        address
+                    }
+                }
+            }
+        }), 
+        totalServiceCount : builder.mutation({
+            query({isApproved="", serviceDestination="", serviceType=""}){
+                return {
+                    url : "dashboard/service",
+                    method : "GET",
+                    params : {
+                        isApproved,
+                        serviceDestination,
+                        serviceType
+                    }
+                }
+            }
         })
 
     })
 })
 
 export const {useGetCurrentUserQuery,
+    useTotalCountQuery,
+    useTotalServiceCountMutation,
+    useTotalUserCountMutation,
     useChangePasswordMutation,
     useUploadDestinationMutation,
     useUpdateDestinationMutation,

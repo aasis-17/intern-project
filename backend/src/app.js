@@ -16,7 +16,7 @@ app.use(cors({
 app.use(cookieParser())
 
 //router
-import { userRouter, authRouter,nearByServiceRouter, guideRouter, serviceOwnerRouter, destinationRouter, reviewRouter, commentRouter } from "./routes/index.js"
+import { userRouter, authRouter,nearByServiceRouter, guideRouter,dashboardRouter, serviceOwnerRouter, destinationRouter, reviewRouter, commentRouter } from "./routes/index.js"
 import { accessToRole } from "./middleware/access.middleware.js"
 
 app.use("/api/v1/auth", authRouter)
@@ -27,5 +27,6 @@ app.use("/api/v1/destination", destinationRouter)
 app.use("/api/v1/review", reviewRouter)
 app.use("/api/v1/comment", commentRouter)
 app.use("/api/v1/nearByService", nearByServiceRouter)
+app.use("/api/v1/dashboard", dashboardRouter)
 
 export default app
