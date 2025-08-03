@@ -7,14 +7,12 @@ import Header from './components/layouts/Header.jsx'
 import User from './pages/signup/User.jsx';
 import Login from './pages/Login.jsx';
 import Destination from './pages/Destination.jsx';
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import ServiceProfile from './pages/serviceProfile/serviceProfile.jsx';
 import DestinationDetailPage from './pages/DestinationDetail.jsx';
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from './store/authContext.jsx';
 import RoutePlan from './components/layouts/destination/RoutePlan.jsx';
 import RouteIndex from './components/layouts/destination/RouteIndex.jsx';
-// import RouteGallery from './components/layouts/destination/Routegallery.jsx';
-import ReviewComponent from './components/Review.jsx';
 import userService from './services/userService.js';
 import PageProtector from './components/AuthLayout.jsx';
 import RouteUpload from './components/layouts/admin/RouteUpload.jsx';
@@ -36,6 +34,7 @@ import authService from './services/authServices.js';
 import AdminServices from './pages/admin/AdminServices.jsx';
 import Service from "./pages/signup/Service.jsx"
 import ServiceDetails from './pages/admin/ServiceDetails.jsx';
+import Services from './pages/services/Services.jsx';
 
 function App() {
 
@@ -57,7 +56,7 @@ function App() {
         navigate("/")
         
        } catch (error) {
-        console.log(error)
+       
        }
        
     }finally{
@@ -80,9 +79,8 @@ function App() {
           <Route path="/destination" element={<Destination />} />
           <Route path="/:id" element={<PageProtector children={<UserProfile />}/>} />
           <Route path='settings' element={<Settings />} />
-            {/* <Route index  element={<ServiceOwner />}/>
-            <Route path='photoUpload' element={<PhotoUpload />} />
-        </Route> */}
+          <Route path='profile/:id' element={<PageProtector children={<ServiceProfile />}/>} />
+          <Route path='services' element={<Services />} />
 
           {/* Destination detailed page */}
            <Route path='/destination/:id' element={<PageProtector authentication={false} children={<DestinationDetailPage />} />} >

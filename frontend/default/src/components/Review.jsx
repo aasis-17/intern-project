@@ -1,10 +1,13 @@
-import React, { useContext, useState } from "react";
-import { useLocation, useOutletContext } from "react-router";
+import { useContext, useState } from "react";
+// import { useLocation, useOutletContext } from "react-router";
 import { useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
 import reviewService from "../services/reviewService.js"
 import { AuthContext } from "../store/authContext.jsx";
+import {toast} from "react-toastify"
+import Notify from "./toast/Notify.jsx";
+import Button from "./Button.jsx";
 
-const ReviewComponent = ({reviewState}) => {
+const ReviewComponent = ({reviewState, reviewId}) => {
 
   const [hoverRating, setHoverRating] = useState(0);
   const [reviews, setReviews] = useState({
@@ -12,9 +15,10 @@ const ReviewComponent = ({reviewState}) => {
     comment : ""
   });
   const queryClient = useQueryClient()
+
   const {state, dispatch} = useContext(AuthContext)
 
-  const reviewDetails = queryClient.getQueryData([reviewState])
+  const reviewDetails = queryClient.getQueryData([reviewState, reviewId])
 
   const handleStarClick = (star) => {
     setReviews(prev => ({...prev, rating : star }))
@@ -39,16 +43,17 @@ const ReviewComponent = ({reviewState}) => {
     },
     onSuccess : (data) => {
       if(reviewState === "serviceId"){
-        queryClient.setQueryData([reviewState],(prev) => ({...prev, reviews : prev.reviews.filter(review => review._id !== data._id)}) )
-        alert(`Review deleted successfully!!`)
+        queryClient.setQueryData([reviewState, reviewId],(prev) => ({...prev, reviews : prev.reviews.filter(review => review._id !== data._id)}) )
+        
+        toast.success(Notify, {data : {msg :`Service review deleted successfully!!`}, autoClose : 1000})
       }else{
-        queryClient.setQueryData( [reviewState], 
+        queryClient.setQueryData( [reviewState, reviewId], 
           (prev) => ({...prev, reviews : prev.reviews.filter(review => review._id !== data._id)}) )
-        alert(`Review deleted successfully!!`)
+        toast.success(Notify, {data : {msg :`Destination Review deleted successfully!!`}, autoClose : 1000})
       }
     },
-    onError : () => {
-      alert(`Error while deleting review!!`)
+    onError : (error) => {
+      toast.error(Notify,{data : {msg : error ||`Error while deleting review!!`}, autoClose : 1000})
     }
   })
 
@@ -67,18 +72,18 @@ const ReviewComponent = ({reviewState}) => {
     onSuccess : (data) => {
       if(!data) return 
       if(reviewState === "serviceId"){
-        queryClient.setQueryData([reviewState], data) 
-        alert(`Review submitted to ${reviewState} successfully!!`)
+        queryClient.setQueryData([reviewState, reviewId], data) 
+        toast.success(Notify,{data : {msg : `Review submitted to ${reviewState} successfully!!`}, autoClose : 1000})
         setReviews({rating : 0, comment : ""})
       }else{
-        queryClient.setQueryData( [reviewState], data ) 
-        alert(`Review submitted to ${reviewState} successfully!!`)
+        queryClient.setQueryData( [reviewState, reviewId], data ) 
+        toast.success(Notify, {data : {msg : `Review submitted to ${reviewState} successfully!!`}, autoClose : 1000})
         setReviews({rating : 0, comment : ""})
       }
 
     },
     onError : (error) => {
-      alert(error)
+      toast.error(Notify,{data : {msg :error || "Error while submitting review!!"}, autoClose : 1000})
     }
   })
 
@@ -89,11 +94,11 @@ const ReviewComponent = ({reviewState}) => {
         <h3 className="text-xl font-semibold text-purple-800 mb-4">
           Submitted Reviews
         </h3>
-        {reviewDetails?.length === 0 ? (
+        {reviewDetails?.reviews?.length === 0 ? (
           <p className="text-gray-500 text-center">No reviews yet.</p>
         ) : (
           <div className="overflow-y-scroll h-96">{
-          reviewDetails?.reviews.map((review) => (
+          reviewDetails.reviews.map((review) => (
 
             <div key={review._id} className="bg-white px-6 mb-5 py-2 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                  <div className="flex justify-end">
@@ -106,30 +111,9 @@ const ReviewComponent = ({reviewState}) => {
             <p className="text-gray-600 mb-2">"{review.reviewMessage}"</p>
             <div className="flex justify-between">
             <p className="text-gray-800 font-semibold">- {review.creator.fullname}</p>
-            {state.userData && review.creator._id === state.userData._id && <span onClick={() =>deleteMutation.mutateAsync(review._id)} className= " flex items-end  text-red-500 text-xs cursor-pointer">Delete</span>}
+            {state.userData && review.creator._id === state.userData._id && <Button variant="noCss" onClick={() =>deleteMutation.mutateAsync(review._id)} className= " flex items-end  text-red-500 text-xs cursor-pointer" loading={deleteMutation.isPending} children="Delete"/>}
             </div>    
           </div>
-            // <div
-            //   key={review._id}
-            //   className="flex  mb-4 p-4 bg-white rounded-lg shadow-md border border-purple-100"
-            // >
-            //   <div className="w-1/4">
-            //     <img alt="avatar" className="w-7 h-7 rounded-full mb-2" src={review.creator.avatar} />
-            //     <span>{review.creator.fullname}</span>
-            //   </div>
-            //   <div className="flex-1 items-center space-x-2  ">
-            //     <div className="flex justify-end">
-            //       {[...Array(review.rating)].map((_, i) => (
-            //         <span key={i} className="text-yellow-400 text-xl">
-            //           ★
-            //         </span>
-            //       ))}
-            //     </div>
-            //     <p className="text-gray-700 text-lg">{review.reviewMessage}</p>
-                
-            //   </div>
-            //   {review.creator._id === state.userData._id && <span onClick={() =>deleteMutation.mutateAsync(review._id)} className= " flex items-end  text-red-500 text-xs cursor-pointer">Delete</span>}
-            // </div>
             ))
           }
           </div>)
@@ -174,12 +158,14 @@ const ReviewComponent = ({reviewState}) => {
       />
 
       {/* Submit Button */}
-      <button
+      <Button
         onClick={mutation.mutate}
+        loading={mutation.isPending}
         className="mt-6 w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg"
-      >
-        Submit Review
-      </button>
+        children="Submit Review"
+      />
+       
+      
       </div>
       </>
     

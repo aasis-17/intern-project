@@ -22,7 +22,7 @@ const Header = ({}) => {
   const navChild = [
     {name : "Home", link : "/"},
     {name : "Destination", link : "/destination"},
-    {name : "About", link : "/about"},
+    {name : "Services", link : "/services"},
     {name : "Contact", link : "/contact"}
   ]
 
@@ -30,7 +30,6 @@ const Header = ({}) => {
   useEffect(()=>{
     const handleHeaderScroll = useThrottel(() => {
       const currentScroll = window.scrollY
-      console.log(currentScroll, lastScroll)
       if(currentScroll > lastScroll) setIsVisible(true)
 
       else setIsVisible(false)

@@ -96,13 +96,13 @@ const routes = [
     }
     ]
   },
-  {
-    name: "Users",
-    layout: "/admin",
-    path: "profile",
-    icon: <MdPerson className="h-6 w-6" />,
-    component: <Profile />,
-  },
+  // {
+  //   name: "Users",
+  //   layout: "/admin",
+  //   path: "profile",
+  //   icon: <MdPerson className="h-6 w-6" />,
+  //   component: <Profile />,
+  // },
   {
     name: "Setting",
     layout: "/admin",

@@ -1,29 +1,27 @@
-import React from "react";
-import Dropdown from "../dropdown";
+import React, { useEffect } from "react";
 import { FiAlignJustify } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
-import navbarimage from "../../assets/img/layout/Navbar.png";
-import { BsArrowBarUp } from "react-icons/bs";
-import { FiSearch } from "react-icons/fi";
 import { RiMoonFill, RiSunFill } from "react-icons/ri";
-import {
-  IoMdNotificationsOutline,
-  IoMdInformationCircleOutline,
-} from "react-icons/io";
-import avatar from "../../assets/img/avatars/avatar4.png";
 import { useLogoutUserMutation } from "../../services/authApi";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "../../store/authSlice";
-// import { useNavigate } from "react-router-dom";
+import {toast} from "react-toastify"
+import Notify from "../../layouts/toast/Notify";
 
 const Navbar = (props) => {
   const { onOpenSidenav, brandText } = props;
   const [darkmode, setDarkmode] = React.useState(false);
   const dispatch = useDispatch()
-  const [logout, {isError, isLoading, isSuccess}] = useLogoutUserMutation()
+  const [logout, {isError, isLoading, isSuccess, error}] = useLogoutUserMutation() 
   const navigate = useNavigate()
 
-  isSuccess && (navigate("/"), dispatch(logoutUser()))
+  
+
+  useEffect(()=>{
+    isSuccess && (navigate("/"), dispatch(logoutUser())) 
+    && toast.success(Notify, {data : {msg : "Logout successfully!!"}, autoClose : 1000})
+    isError && toast.error(Notify, {data : {msg : error.data.message || "Error while logging out!!"}, autoClose : 1000})
+  },[isSuccess, isError])
 
   return (
     <nav className="sticky top-4 z-40 flex flex-row flex-wrap items-center justify-between rounded-xl bg-white/10 p-2 backdrop-blur-xl dark:bg-[#0b14374d]">
@@ -74,7 +72,7 @@ const Navbar = (props) => {
           <FiAlignJustify className="h-5 w-5" />
         </span>
         {/* start Notification */}
-        <Dropdown
+        {/* <Dropdown
           button={
             <p className="cursor-pointer">
               <IoMdNotificationsOutline className="h-24 w-7 text-gray-600 dark:text-white" />
@@ -90,10 +88,10 @@ const Navbar = (props) => {
                 <p className="text-sm font-bold text-navy-700 dark:text-white">
                   Mark all read
                 </p>
-              </div>
+              </div> */}
 
 
-              <button className="flex w-full items-center">
+              {/* <button className="flex w-full items-center">
                 <div className="flex h-full w-[85px] items-center justify-center rounded-xl bg-gradient-to-b from-brandLinear to-brand-500 py-4 text-2xl text-white">
                   <BsArrowBarUp />
                 </div>
@@ -109,7 +107,7 @@ const Navbar = (props) => {
             </div>
           }
           classNames={"py-2 top-4 -left-[230px] md:-left-[440px] w-max"}
-        />
+        /> */}
         {/* start Horizon PRO */}
         {/* <Dropdown
           button={

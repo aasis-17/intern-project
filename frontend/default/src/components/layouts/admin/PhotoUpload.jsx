@@ -5,12 +5,15 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useOutletContext } from 'react-router'
 import destinationService from '../../../services/destinationService'
 import serviceOwnerService from '../../../services/serviceOwnerServices'
+import { toast } from 'react-toastify'
+import Notify from '../../toast/Notify'
 
-const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
+const PhotoUpload = ({option, id, setBtnVisible}) => {
     const state = useOutletContext()
     const navigate = useNavigate()
 
     const queryClient = useQueryClient()
+    const serviceDetails = queryClient.getQueryData(["serviceDetails", id ])
 
     const [imagePreview, setImagePreview] = useState(0)
     const [images, setImages] = useState(option === "service" ? [...serviceDetails.serviceImages] : [...state.destinationImages] || [])
@@ -31,21 +34,26 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
         mutationFn :async (image) => {  
             if(option === "service"){
                 if(!image.hasOwnProperty("publicId")) return
-                await serviceOwnerService.deleteServiceImage(serviceDetails._id, image)
+                const data = await serviceOwnerService.deleteServiceImage(serviceDetails._id, image)
+                queryClient.setQueryData(["serviceDetails", id], (prev) =>{
+                    Object.assign(prev, data)
+                })
+                
             } else{
                 if(image.hasOwnProperty("publicId")){
                     console.log(images)
                    await destinationService.deleteDestinationImage(image, state._id)
                 }
             }
-
             setImages(prev => prev.filter((img) => img.src !== image.src))
+
+            
         },
         onSuccess : () => {
-            alert("Image deleted successfully!!")
+            toast.success(Notify,{data : {msg : "Image deleted successfully!!"}, autoClose : 1000})
         },
         onError : () =>{
-            alert("Error while deleting image!!")
+            toast.error(Notify,{data : {msg : "Error while deleting image!!"}, autoClose : 1000})
         }
       })
 
@@ -61,15 +69,18 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
                 images.forEach(image => {
                     if(image.hasOwnProperty("file")) formData.append("serviceImages", image.file)
                 })  
-                await serviceOwnerService.addServiceImages(formData, serviceDetails._id)   
+                const data = await serviceOwnerService.addServiceImages(formData, serviceDetails._id) 
+                console.log(data)  
+                queryClient.setQueryData(["serviceDetails", id], (prev) => Object.assign(prev, data))
+                setImages([...data.serviceImages])
             }
 
         },
         onSuccess : () => {
-            alert(`Images added successfully!!`)
+            toast.success(Notify,{data : {msg :`Images added successfully!!`},autoClose :1000})
         },
         onError : () => {
-            alert("Error while uploading Images!!")
+            toast.error(Notify, {data : {msg : "Error while uploading Images!!"},autoClose : 1000})
         }
       })
 
@@ -92,19 +103,8 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
             onClick={() => navigate(-1)}
             variant='secondary'/>
 }
-            {/* <div> */}
-            {/* <Button 
-            children="Add Routes"
-            size='md'
-            onClick={() => navigate(`/admin/upload/${state._id}/route`)}
-            variant='secondary'/> */}
-
-
-            {/* </div> */}
 
             </div>
-            
-
             <div className='flex gap-x-5'>
                 <div className='flex-1 h-80  '>
                     <img alt='images' className='rounded-lg  object-cover w-full h-full' 
@@ -137,7 +137,7 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
 
                                 return (<li key={image.src} className='flex bg-gray-100 rounded-lg overflow-hidden justify-between h-14 w-full mb-3'>
                                     <img className='w-[40%] object-cover rounded-lg' src={image.src} />
-                                    <Button size='sm' variant='delete' children="Delete" onClick={() =>deleteMutation.mutateAsync(image)} />
+                                    <Button loading={deleteMutation.isPending} size='sm' variant='delete' children="Delete" onClick={() =>deleteMutation.mutateAsync(image)} />
                                     </li>)        
                         }) }
                     </ul>
@@ -145,7 +145,7 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
         
           </div>
           <div className='mt-20'>
-          <Button children="Submit" className='w-full ' onClick={mutation.mutateAsync} />
+          <Button children="Submit" className='w-full ' loading={mutation.isPending} onClick={mutation.mutateAsync} />
           </div>
 
         </div>

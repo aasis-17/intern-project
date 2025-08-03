@@ -18,7 +18,7 @@ if (!visible) return null; // Render nothing if not visible
 
 Modal.propTypes = {
   visible: PropTypes.bool.isRequired, // Controls modal visibility
-  onClose: PropTypes.func.isRequired, // Function to close modal
+  onClose: PropTypes.func, // Function to close modal
   children: PropTypes.node,           // Content inside the modal
 };
 

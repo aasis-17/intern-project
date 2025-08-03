@@ -15,7 +15,6 @@ const FormField= ({
 },ref) =>
 {
   const key = uuidv4()
-  console.log(defaultValue)
 return (
 
   <>

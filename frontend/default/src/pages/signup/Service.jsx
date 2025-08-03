@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import { useContext } from 'react'
 import { useState } from "react";
 import FormField from '../../components/form/FormField.jsx';
 import { useForm } from "react-hook-form"
@@ -13,8 +13,11 @@ import destinationService from '../../services/destinationService.js';
 import serviceOwnerService from '../../services/serviceOwnerServices.js';
 import { AuthContext } from '../../store/authContext.jsx';
 import PhotoUpload from '../../components/layouts/admin/PhotoUpload.jsx';
+import { toast } from 'react-toastify';
+import Notify from '../../components/toast/Notify.jsx';
+import Loader from '../../components/loader/Loader.jsx';
 
-const ServiceOwner = ({option, details : serviceDetails}) => {
+const ServiceOwner = ({option }) => {
     const [visible, setVisible] = useState(() => option !== "edit" )
     const [btnVisible, setBtnVisible] = useState(false)
     const [imagePreview, setImagePreview] = useState("")
@@ -22,17 +25,17 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
     const {state} = useContext(AuthContext)
 
     const queryClient = useQueryClient()
-    // const serviceDetails = queryClient.getQueryData(["serviceDetails"])
-
-    console.log(serviceDetails)
+    const serviceDetails = queryClient.getQueryData(["serviceDetails", state.userData._id])
 
     const navigate = useNavigate()
 
     const [mapState, setMapState] = useState({
-        position : serviceDetails ? latLng( serviceDetails?.serviceLocationMapCoordinates.latitude, serviceDetails?.serviceLocationMapCoordinates.longitude) : "",
+        position : latLng( serviceDetails?.serviceLocationMapCoordinates.latitude, serviceDetails?.serviceLocationMapCoordinates.longitude) || "",
         province : {lat : serviceDetails?.serviceLocationMapCoordinates.latitude ||  29.8412 , lng :serviceDetails?.serviceLocationMapCoordinates.longitude ||88.0943} ,
         region : serviceDetails?.serviceDestination || ""
     })
+
+    console.log(serviceDetails)
 
 
     const {data, isSuccess}= useQuery({
@@ -46,7 +49,6 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
     let locations = isSuccess ? data.destinations?.map(destination => {
       return {name : destination.destinationName,_id : destination._id, latLng : {lat : destination.destinationMapCoordinates.latitude, lng :destination.destinationMapCoordinates.longitude}}
     }) : []
-     console.log( locations)
 
     const {register ,handleSubmit, reset} = useForm()
   
@@ -84,36 +86,43 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
         formData.append("longitude", mapState.position.lng)
         formData.append("serviceDestination",mapState.region )
         if(option === "edit"){
-          console.log(formData)
-          await serviceOwnerService.updateServiceInfo( formData, serviceDetails._id)
+          const data = await serviceOwnerService.updateServiceInfo( formData, serviceDetails._id)
+          return data
         }else{
-          await serviceOwnerService.upgradeToServiceOwner(formData)
+          const data = await serviceOwnerService.upgradeToServiceOwner(formData)
+          return data
         }    
       },
-      onSuccess : () => {
+      onSuccess : (data) => {
+        
         if(option === "edit"){
-          alert(`Service info updated successfully!!`)
+          toast.success(Notify,{data : {msg :`Service info updated successfully!!`}, autoClose : 1000})
           setVisible(false)
         }else{
-          alert(`Service request send successfully!!`) 
+          toast.success(Notify,{data : {msg : `Service request send successfully!!`}, autoClose : 1000}) 
           navigate(-1)
           reset()         
         }
-        queryClient.invalidateQueries({queryKey : ["serviceOwner"]})
-      },
+        // queryClient.invalidateQueries({queryKey : ["serviceOwner"]})
+                queryClient.setQueryData(["serviceDetails", state.userData._id], (prev) =>{
+                    Object.assign(prev, data)
+                })
+
+              },
+
       onError : (error) => {
         if(option==="edit"){
-          alert("Error while  updating service info!!",error)
+          toast.error(Notify, {data : {msg :error || "Error while  updating service info!!" }, autoClose : 1000})
         }else{
-          alert("Error while  signing user as service !!",error)
+          toast.error(Notify, {data : {msg : error || "Error while  signing user as service !!"}, autoClose : 1000})
         }
 
       }
     })
-
+  if(!serviceDetails) return <Loader />
    return(
    <div className=' flex-1'>
-    {btnVisible ? (<PhotoUpload details={serviceDetails} option="service" setBtnVisible={setBtnVisible} />) 
+    {btnVisible ? (<PhotoUpload id={state.userData._id} option="service" setBtnVisible={setBtnVisible} />) 
     : (
          <form onSubmit={ handleSubmit(mutation.mutateAsync) } className=" h-full  flex flex-col justify-evenly">
           <div className='flex justify-between'>
@@ -141,7 +150,7 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
           </div>
 
           {/* map preview */}
-          <div className='h-48 w-full'>
+          <div className='h-48 w-full z-0'>
               <Map 
                 children={
                   <RouteLocate 
@@ -182,7 +191,7 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
           {/* serviceName */}
           <div className=''>
           <FormField 
-                defaultValue={serviceDetails && serviceDetails.serviceName}
+                defaultValue={ serviceDetails?.serviceName}
                 readOnly={!visible}
                 labelClassName = "block text-sm font-medium text-gray-700"
                 className = "mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200"
@@ -201,7 +210,7 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
               Service type :
             </label>
             <select
-              defaultValue={serviceDetails && serviceDetails.serviceType}
+              defaultValue={serviceDetails?.serviceType}
               onChange={handleChange}
               required
               className="w-full mt-1 px-4 py-2 border rounded-md focus:ring focus:ring-blue-300"
@@ -236,7 +245,7 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
           {/* service located coordinates preview */}
           <div className=''>
             <FormField
-              defaultValue={mapState.position}
+              // defaultValue={mapState.position}
               label="Service Located Map Coordinates :"
               value={mapState.position}
               readOnly={true}
@@ -275,6 +284,7 @@ const ServiceOwner = ({option, details : serviceDetails}) => {
           {/* Submit Button */}
           {visible   && (
           <Button
+          loading={mutation.isPending}
           type="submit"
           className='w-full my-3'
          children= {`${option === "edit" && "Save" || option ==="admin" && "Add service" || "Create Page as Service " }`}

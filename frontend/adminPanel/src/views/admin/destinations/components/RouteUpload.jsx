@@ -1,12 +1,13 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import FormField from '../../../../components/fields/FormField'
 import TextField from '../../../../components/fields/TextFieldcustom'
 import RouteLocate from '../../../../components/map/MapRouting'
 import { useNavigate, useOutletContext } from 'react-router'
 import Button from '../../../../components/button/Button'
 import { latLng } from 'leaflet'
-import { useForm } from 'react-hook-form'
 import { useUploadRouteMutation, useRemoveRoutePlanMutation } from '../../../../services/apiSlice'
+import { toast } from 'react-toastify'
+import Notify from '../../../../layouts/toast/Notify'
 
 const RouteUpload = () => {
 
@@ -24,19 +25,26 @@ const RouteUpload = () => {
                     eLocation  : ""
         }
     })
-    console.log(routeDetails)
 
     const routes = useRef(destination?.routePlan[0]? [...destination?.routePlan] : []  )
 
-    const [uploadRouteMutation,{isSuccess, isError}] = useUploadRouteMutation()
-    const [removeRoutePlan, {isSuccess : isRemovedSuccess, isError: isRemovedError}] = useRemoveRoutePlanMutation()
+    const [uploadRouteMutation,{isSuccess : isRouteUploadSuccess, isError : isRouteUploadError,error : routeUploadError, isLoading : isRouteUploading, reset : routeUploadReset}] = useUploadRouteMutation()
+    const [removeRoutePlan, {isLoading : isRouteRemoving, isSuccess : isRouteRemovedSuccess, isError: isRouteRemovedError, error:routeRemovedError, reset : routeRemovedReset}] = useRemoveRoutePlanMutation()
+
+    const notification = () => {
+        isRouteUploadSuccess && toast.success(Notify, {data : { msg : `Route Added to destination!! ${destination.destinationName}`}, autoClose : 1000}) && routeUploadReset()
+        isRouteUploadError && toast.error(Notify, {data : {msg : routeUploadError?.data?.message ||`Error to add  destination route!! ${destination.destinationName}` }, autoClose : 1000}) && routeUploadReset()
+        isRouteRemovedSuccess &&  toast.success(Notify, {data : { msg : "Route removed successfully!!"}, autoClose : 1000}) && routeRemovedReset()
+        isRouteRemovedError &&  toast.error(Notify, {data : {msg : routeRemovedError?.data?.message ||"Error while removing route!!"}, autoClose : 1000}) && routeRemovedReset()
+    }
 
     useEffect(()=>{
-    isSuccess && alert(`Route Added to destination!! ${destination.destinationName}`)
-    isError && alert(`Error to add  destination route!! ${destination.destinationName}`)
-    },[isSuccess, isError])
+       notification()
+    },[isRouteUploadSuccess,isRouteUploadError, isRouteRemovedSuccess, isRouteRemovedError ])
 
 
+    const handleUploadImage = () => uploadRouteMutation({id :destination._id, data :routes.current})
+    
     const handleChange = (e) => {
         const {name, value} = e.target
         setRouteDetails(prev => {
@@ -47,14 +55,13 @@ const RouteUpload = () => {
     const addRoute = (e) => {
         e.preventDefault()
         if(!routeDetails.day ||!routeDetails.routeTask ){
-            alert("Field missing!!")
+            toast.error({data : {msg : "Field missing!!"}, autoClose :1000})
             return
         }
         else if(routes.current.filter(route => route.day === routeDetails.day)[0]){
-            alert("Day match please change!!")
+            toast.error({data : { msg : "Day already exists!!"}, autoClose : 1000})
             return
         }else{
-            console.log(routeDetails)
             routes.current.push(routeDetails)
             setRouteDetails({
                 day : "",
@@ -64,13 +71,11 @@ const RouteUpload = () => {
                     eLocation : ""
                 }
             })
-            console.log("routes pushed",routes.current)
         }
     }
 
     const removeRoute = async(e) => {
         e.preventDefault()
-        console.log(routes.current[routeIndex])
         await removeRoutePlan({destinationId : destination._id, routeId : routes.current[routeIndex]._id})
         routes.current = routes.current.filter(route => route.day !== routeDetails.day )
         setRouteDetails({
@@ -86,9 +91,9 @@ const RouteUpload = () => {
 
   return (
     <div className='h-full'>
-         <form className=" h-full relative flex flex-col justify-evenly ml-4">
+         <form className=" h-full flex flex-col justify-between ml-4">
             <div className='flex justify-between items-center'>
-                <div className='text-4xl font-garamond '>Route details</div>
+                <div className='text-4xl font-garamond mb-10'>Route details</div>
 
                 <div className='mr-4'>
                 {routes.current[0] && routes.current.map((route, index) => {
@@ -101,7 +106,6 @@ const RouteUpload = () => {
                                 children={`Day ${route.day}`}
                                 onClick={() => {
                                     setRouteIndex(index)
-                                    console.log(index)
                                     setRouteDetails(routes.current[index])
                                     setShowRoute(true)
                             }} />)
@@ -118,9 +122,9 @@ const RouteUpload = () => {
                         setShowRoute(false)
                         }} />}
                         </div>
-                        <Button 
-                  onClick={() =>  destination ? navigate(`/admin/destinations/${destination._id}/photoUpload`) : alert("create destination first!!")} 
-                  children="Add Photos" 
+                <Button 
+                  onClick={() =>  navigate(-1)} 
+                  children="< back" 
                   size='sm'
                   variant='secondary'
                   />  
@@ -170,7 +174,7 @@ const RouteUpload = () => {
                 </div>
                 </div>
 
-                <div className='flex '>
+                <div className='flex mt-10'>
 
                 {/* Starting route coordinates preview */}
                 <div className='w-1/2'>
@@ -200,7 +204,7 @@ const RouteUpload = () => {
                 </div>
            
           {/* Submit Button */}
-          <div className='flex gap-10'>
+          <div className='flex gap-10 mt-10'>
           <div className='w-1/2 flex gap-2'>
           <Button
             onClick={addRoute}
@@ -210,6 +214,7 @@ const RouteUpload = () => {
           {showRoute && (
           <Button
           onClick={removeRoute}
+          loading ={isRouteRemoving}
           variant='delete'
           className="w-1/2 px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition"
           children="Remove Route"
@@ -219,9 +224,10 @@ const RouteUpload = () => {
           </div>
 
              <Button
-            onClick={() => uploadRouteMutation({id :destination._id, data :routes.current})}
+            onClick={handleUploadImage}
             className="w-1/2 px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition"
             children="Submit Route"
+            loading={isRouteUploading}
           />
           </div>
                 </form>

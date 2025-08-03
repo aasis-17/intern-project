@@ -6,7 +6,6 @@ const PageProtector = ({children}) => {
 
   const navigate = useNavigate()
   const authStatus = useSelector((state) => state.auth.authStatus)
-  console.log("auth status", authStatus)
 
     if(!authStatus){ 
       return <Navigate to={"/"} replace/> 

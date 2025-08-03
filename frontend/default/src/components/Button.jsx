@@ -22,6 +22,7 @@ const Button = ({
       // primary: 'bg-blue-500 text-white hover:bg-blue-600',
       // secondary: 'bg-gray-500 text-white hover:bg-gray-600',
       delete: ' text-white bg-red-400 hover:bg-red-500 ',
+      noCss : ""
     }[variant];
   
     const sizeClass = {
@@ -53,7 +54,7 @@ const Button = ({
   
   Button.propTypes = {
     type: PropTypes.oneOf(['button', 'submit', 'reset']),
-    variant: PropTypes.oneOf(['primary', 'outline', 'delete']),
+    variant: PropTypes.oneOf(['primary', 'outline', 'delete', "noCss"]),
     size: PropTypes.oneOf(['sm', 'md', 'lg']),
     onClick: PropTypes.func,
     disabled: PropTypes.bool,

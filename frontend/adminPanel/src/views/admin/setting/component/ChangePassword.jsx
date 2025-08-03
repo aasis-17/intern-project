@@ -3,6 +3,8 @@ import FormField from '../../../../components/fields/FormField'
 import { useForm } from 'react-hook-form'
 import Button from '../../../../components/button/Button'
 import { useChangePasswordMutation } from '../../../../services/apiSlice'
+import { toast } from 'react-toastify'
+import Notify from '../../../../layouts/toast/Notify'
 
 
 const ChangePassword = () => {
@@ -12,18 +14,22 @@ const ChangePassword = () => {
         confirmPassword : false
       })
 
-      const [changePassword,{isSuccess, isError, error}] = useChangePasswordMutation()
+      const [changePassword,{isSuccess, isError, error, isLoading, reset : changeReset}] = useChangePasswordMutation()
       
       const mutation = async (formData) => {
         if(formData.newPassword === formData.confirmPassword){
             await changePassword(formData)
-            console.log( "validate",formData)
           }
       }
 
+      const notification =() =>{
+        isSuccess && toast.success(Notify, {data : {msg : "Password changed successfully!!"}, autoClose : 1000}) && changeReset()
+        isError && toast.error(Notify, {data : {msg : error?.data?.message || "Error while changing password!!"}, autoClose : 1000}) && changeReset()
+      }
+
       useEffect(()=>{
-        isSuccess && alert("Password changed successfully!!")
-      },[isSuccess])
+        notification()
+      },[isSuccess, isError])
     
       const {register, handleSubmit, reset} = useForm()
 
@@ -101,9 +107,10 @@ const ChangePassword = () => {
         onClick={() => setVisibility(prev => ({...prev, confirmPassword : !prev.confirmPassword }))}
         />   
         </div>
-        {isError && <span className='text-red-500 text-xs'>{error}</span>}
+        {isError && <span className='text-red-500 text-xs'>{error?.data?.message}</span>}
         </div>  
         <Button
+            loading={isLoading}
             type='submit'
             children="Change password"
             className='w-full'

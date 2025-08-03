@@ -1,21 +1,23 @@
-import React, { useEffect } from 'react'
-import { useState } from "react";
+import { useCallback, useEffect, useState } from 'react'
 import FormField from '../../../../components/fields/FormField.jsx';
 import { useForm } from "react-hook-form"
 import Map from "../../../../components/map/Map.jsx"
 import RouteLocate from "../../../../components/map/MapRouting.jsx"
-import { Outlet, useLocation, useNavigate, useOutletContext, useParams} from 'react-router';
+import { useLocation, useNavigate, useOutletContext, useParams} from 'react-router';
 import { latLng } from 'leaflet';
 import Button from '../../../../components/button/Button.jsx';
 import TextField from "../../../../components/fields/TextFieldcustom.jsx"
-import { useGetDestinationByIdQuery, useUpdateDestinationMutation, useUploadDestinationMutation } from '../../../../services/apiSlice.js';
+import {  useUpdateDestinationMutation, useUploadDestinationMutation } from '../../../../services/apiSlice.js';
+import Review from '../../components/Review.jsx';
+import { toast } from 'react-toastify';
+import Notify from '../../../../layouts/toast/Notify.jsx';
 
 const DestinationUpload = ({edit=false}) => {
 
     const {id} = useParams()
     
     const {state} = useLocation()
-    console.log(state)
+    
     const [imagePreview, setImagePreview] = useState("")
 
     const navigate = useNavigate()
@@ -40,7 +42,7 @@ const DestinationUpload = ({edit=false}) => {
 
     const {register ,handleSubmit, reset} = useForm()
   
-    const handlePreview = (e) => {
+    const handlePreview = useCallback((e) => {
   
       const file = e.target.files[0];
       const reader = new FileReader();
@@ -51,23 +53,21 @@ const DestinationUpload = ({edit=false}) => {
      if (file) {
        reader.readAsDataURL(file);
      } 
-    }
+    },[])
 
-    const handleChange = (e)=>{  
+    const handleChange = useCallback((e)=>{  
       setMapState(prev => ({...prev, region : e.target.value}))
       locations.filter((province) => {
         return province.name === e.target.value && setMapState(prev => ({...prev, province : province.latLng}))
       })
-    }
-    const [mutation, {data, isLoading, isError, isSuccess}] = useUploadDestinationMutation()
-    const [update, {data : updateData, isError : updateError, isSuccess : updateSuccess}] = useUpdateDestinationMutation()
-    console.log(data, 'uploaded', updateData)
-  
+    },[])
 
+    const [mutation, {data, isLoading: isDestinationUploading, isError : isDestinationUploadError, error : destinationUploadError , isSuccess : isDestinationUploadSuccess, reset : destinationUploadReset}] = useUploadDestinationMutation()
+
+    const [update, {data : updateData, isLoading : isDestinationUpdating, isError : isDestinationUpdateError, error : destinationUpdateError, isSuccess : isDestinationUpdateSuccess, reset : destinationUpdateReset}] = useUpdateDestinationMutation()
 
     const handleForm = async(data) => {
-      console.log(data, "formData")
-      // const destinationMapCoordinates = {latitude : mapState.position.lat, longitude : mapState.position.lng}
+
       const formData = new FormData()
       
       Object.keys(data).forEach((key) => {
@@ -84,22 +84,22 @@ const DestinationUpload = ({edit=false}) => {
       !edit ? await mutation({formData, state}) : await update({id, formData, state})
   }
 
+  const notification = () => {
+    isDestinationUploadSuccess && toast.success(Notify, {data : {msg :"Destination created successfully!!"}, autoClose : 1000}) && destinationUploadReset()
+    isDestinationUploadError && toast.error(Notify, {data : {msg : destinationUploadError?.data?.message ||"Error while creating destination!!"}, autoClose : 1000}) && destinationUploadReset()
+
+    isDestinationUpdateSuccess && toast.success(Notify, {data : {msg : "Destination updated successfully!!"}, autoClose : 1000}) && destinationUpdateReset()
+    isDestinationUpdateError && toast.error(Notify, {data : {msg : destinationUpdateError?.data?.message ||"Error while updating destination!!"}, autoClose : 1000}) && destinationUpdateReset()
+  }
+
   useEffect(() => {
-    isSuccess && alert("Destination created successfully!!")
-    isError && alert("Error while creating destination!!")
-    console.log(updateSuccess)
-    updateSuccess && alert("Destination updated successfully!!")
-    updateError && alert("Error while updating destination!!")
-  },[isSuccess, isError, updateSuccess, updateError])
-
-
+   notification()
+  },[isDestinationUploadSuccess, isDestinationUploadError, isDestinationUpdateSuccess, isDestinationUpdateError])
 
    return(
-  //  <div className='h-full flex-1 py-5'>
   <>
          <form onSubmit={ handleSubmit(handleForm) } className=" h-full  flex flex-col justify-evenly ml-4 w-full">
           <div className='flex justify-between'>
-              {/* <div className='text-4xl font-garamond font-medium mb-3'>Destination Details</div> */}
               <div className='flex gap-5 p-2'>
                   <Button 
                   onClick={() =>  destinationDetails  ? navigate(`/admin/destinations/${destinationDetails._id}/route`) : alert("create destination first!!")} 
@@ -108,7 +108,7 @@ const DestinationUpload = ({edit=false}) => {
                   variant='secondary'
                   />  
                   <Button 
-                  onClick={() =>  destinationDetails  ? navigate(`/admin/destinations/${destinationDetails._id}/photoUpload`) : alert("create destination first!!")} 
+                  onClick={() =>  destinationDetails ? navigate(`/admin/destinations/${destinationDetails._id}/photoUpload`) : alert("create destination first!!")} 
                   children="Add Photos" 
                   size='sm'
                   variant='secondary'
@@ -170,8 +170,6 @@ const DestinationUpload = ({edit=false}) => {
           {/* Destination coordinates preview */}
           <div className=''>
             <FormField
-              // defaultValue={mapState.position}
-              // defaultValue={ destinationDetails &&  latLng(destinationDetails.destinationMapCoordinates.latitude, destinationDetails.destinationMapCoordinates.longitude)}
               label="Destination Coordinates :"
               value={mapState.position}
               readOnly={true}
@@ -214,9 +212,9 @@ const DestinationUpload = ({edit=false}) => {
           </div>
           </div>
           {/* map preview */}
-          <div className='h-64 w-[45%]'>
+          <div className='h-64 w-[45%] z-0'>
               <Map 
-              //  className='h-full w-[45%]'
+            
                 children={ 
                   <RouteLocate 
                   mapState={mapState}
@@ -231,16 +229,16 @@ const DestinationUpload = ({edit=false}) => {
           
           {/* Submit Button */}
           <Button
+            loading={isDestinationUploading || isDestinationUpdating}
             type="submit"
             className='w-full mt-5'
-            // className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition"
-           children= "Upload Destination"
+            children= {edit ? "Save" : "Upload"}
           />
 
 
         </form>
 
-    {/* </div> */}
+    <Review reviewData ={destinationDetails} />
     </>
             
     )

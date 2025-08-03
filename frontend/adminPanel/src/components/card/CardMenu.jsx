@@ -32,13 +32,13 @@ function CardMenu(props) {
             <span>
               <AiOutlineUser />
             </span>
-            Panel 1
+            Services
           </p>
           <p className="hover:text-black mt-2 flex cursor-pointer items-center gap-2 pt-1 text-gray-600 hover:font-medium">
             <span>
               <AiOutlineShop />
             </span>
-            Panel 2
+            Destinations
           </p>
           <p className="hover:text-black mt-2 flex cursor-pointer items-center gap-2 pt-1 text-gray-600 hover:font-medium">
             <span>

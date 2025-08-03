@@ -84,6 +84,12 @@ const RouteIndex = () => {
               onClick={()=>navigate(`/${service.userId._id}`)}
               variant='outline' />
               }
+              { service.isApproved === "default" && 
+              <Button
+              children="View Profile"
+              onClick={()=>navigate(`/profile/${service._id}`)}
+              variant='outline' />
+              }
 </div>
             )
           }) : <span className='text-center'>No services avaliable!!</span>}

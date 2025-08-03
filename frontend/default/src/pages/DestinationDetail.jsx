@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import React from 'react'
+import Loader from '../components/loader/Loader';
 import { Outlet, useParams } from 'react-router';
 import destinationService from '../services/destinationService';
 import serviceOwnerService from '../services/serviceOwnerServices';
@@ -9,6 +9,8 @@ const DestinationDetailPage = () => {
 
   const {id} = useParams()
 
+
+
   const{data : destinationDetails, isLoading, isError, error} = useQuery({
     queryKey : ["destinationId", id],
     queryFn : () => destinationService.getDestinationById(id),
@@ -17,11 +19,10 @@ const DestinationDetailPage = () => {
 
   const {data: services, isLoading : serviceLoading} = useQuery({
     queryKey :["nearByServices", id],
-    queryFn : () => serviceOwnerService.getAllServices("", "approved", destinationDetails.destinationName),
+    queryFn : () => serviceOwnerService.getAllServices({search : "", option : "approved", serviceDestination : destinationDetails.destinationName}),
     staleTime : 30 * 1000,
     enabled : !!destinationDetails
 })
-console.log(services)
 
   const navChild = destinationDetails?.routePlan[0] ? [
     {name : "Gallery", link : `/destination/${id}/gallery`, href :"#gallery"},
@@ -32,7 +33,7 @@ console.log(services)
     {name : "Reviews", link : `/destination/${id}/review`,href : "#review", state : { reviewState : "destinationId"}}, 
   ]
 
-  if(serviceLoading || isLoading) return <div>Loading...</div>
+  if(serviceLoading || isLoading) return <Loader />
   if(isError) return <div>{error.message}</div>
 
   return (
@@ -87,7 +88,7 @@ console.log(services)
           </section>
 
           <section className='' id='review'>
-            <Review reviewState={"destinationId"}/>
+            <Review reviewState={"destinationId"} reviewId = {id}/>
           </section>
 
         </div>

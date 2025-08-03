@@ -103,7 +103,7 @@ export const barChartOptionsDailyTraffic = {
 };
 
 export const pieChartOptions = {
-  labels: ["Destinations", "Services", "Users"],
+  labels: ["Hotel", "Restaurent", "HomeStay"],
   colors: ["#4318FF", "#6AD2FF", "#EFF4FB"],
   chart: {
     width: "50px",

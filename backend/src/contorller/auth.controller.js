@@ -128,8 +128,8 @@ export const refreshAccessToken = asyncHandler(async(req, res) =>{
         throw ApiError(400, "Invalid refreshtoken!!")
     }
     //console.log(user.refreshToken)
-    console.log(incomingRefreshToken)
-
+    console.log(incomingRefreshToken !== user.refreshToken)
+    
     if(incomingRefreshToken !== user.refreshToken){
         throw new ApiError(400, "Refreshtoken expired or used!!")
     }

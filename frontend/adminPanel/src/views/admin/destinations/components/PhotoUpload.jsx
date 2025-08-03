@@ -3,10 +3,12 @@ import FormField from '../../../../components/fields/FormField'
 import Button from '../../../../components/button/Button'
 import { useNavigate, useOutletContext } from 'react-router'
 import { useRemoveDestinationPhotoMutation, useUploadDestinationPhotoMutation, useUploadServiceImageMutation, useRemoveServicePhotoMutation } from '../../../../services/apiSlice'
+import { toast } from 'react-toastify'
+import Notify from '../../../../layouts/toast/Notify'
 
 const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
     const state = useOutletContext()
-    console.log(state)
+
     const navigate = useNavigate()
 
     const [imagePreview, setImagePreview] = useState(0)
@@ -24,11 +26,12 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
          reader.readAsDataURL(file);
        } 
       }
-      const [addDestinationImages, { isSuccess : isDestinationImageSuccess, isLoading, isError : isDestinationImageError}] = useUploadDestinationPhotoMutation()
-      const [addServiceImages, {isSuccess : isServiceImageSuccess, isError : isServiceImageError}] = useUploadServiceImageMutation()
 
-      const [removeDestinationImage, {isError : isDestinationImageDeletedError, isSuccess : isDestinationImageDeletedSuccess }] = useRemoveDestinationPhotoMutation()
-      const [removeServiceImage, {isError : isServiceImageDeletedError, isSuccess : isServiceImageDeletedSuccess}] = useRemoveServicePhotoMutation()
+      const [addDestinationImages, {isSuccess : isDestinationImageSuccess, isLoading : isDestinationImageUploading, isError : isDestinationImageError, error : destinationUploadError, reset : destinationUploadReset}] = useUploadDestinationPhotoMutation()
+      const [addServiceImages, {isSuccess : isServiceImageSuccess, isError : isServiceImageError, isLoading : isServiceImageUploading, error : serviceUploadError, reset : serviceUploadReset}] = useUploadServiceImageMutation()
+
+      const [removeDestinationImage, {reset: destinationDeleteReset, isError : isDestinationImageDeletedError, isSuccess : isDestinationImageDeletedSuccess, isLoading : isDestinationImageDeleting, error : destinationDeleteError }] = useRemoveDestinationPhotoMutation()
+      const [removeServiceImage, {isError : isServiceImageDeletedError, isSuccess : isServiceImageDeletedSuccess, isLoading : isServiceImageDeleting, reset : serviceDeleteReset, error : serviceDeleteError}] = useRemoveServicePhotoMutation()
 
       const handlePhotoDelete = async (image)=> {
             if(option === "service"){
@@ -47,24 +50,31 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
                 images.forEach(image => {
                     if(image.hasOwnProperty("file")) formData.append("destinationImages", image.file)
                 })  
-                await addDestinationImages({data : formData, destinationId :state._id})   
+                const {data : destination} = await addDestinationImages({data : formData, destinationId :state._id}) 
+                setImages([...destination.data.destinationImages])
             }else{
                 images.forEach(image => {
                     if(image.hasOwnProperty("file")) formData.append("serviceImages", image.file)
                 })  
-                await addServiceImages({data : formData, serviceId : serviceDetails._id})   
-            }         
-        }
+                const {data:service} = await addServiceImages({data : formData, serviceId : serviceDetails._id})
+                setImages([...service.data.serviceImages])   
+            }       
+        } 
+
+    const notification = () => {
+      isDestinationImageError  && toast.error(Notify, {data : {msg : destinationUploadError.data?.message || `Destination Photo upload error!!`}, autoClose : 1000}) && destinationUploadReset()
+      isDestinationImageDeletedError  && toast.error(Notify,{data : {msg : destinationDeleteError?.data?.message ||`Destination Photo delete error!!`}, autoClose : 1000}) && destinationDeleteReset()
+      isDestinationImageSuccess  &&  toast.success(Notify,{data : {msg :`Destination photo uploaded successfully!!`}, autoClose : 1000}) && destinationUploadReset()
+      isDestinationImageDeletedSuccess  && toast.success(Notify,{data : { msg :`Destination Photo deleted successfully!!`}, autoClose : 1000}) && destinationDeleteReset()
+      isServiceImageDeletedError && toast.error(Notify,{data : {msg : serviceDeleteError?.data?.message || "Service photo delete error!!"}, autoClose : 1000})  && serviceDeleteReset()
+      isServiceImageDeletedSuccess && toast.success(Notify,{data : {msg : "service photo deleted successfully!!"}, autoClose : 1000}) && serviceDeleteReset()
+      isServiceImageError && toast.error(Notify,{data  : {msg : serviceUploadError?.data?.message || "Service photo upload error!!"}, autoClose : 1000}) && serviceUploadReset()
+      isServiceImageSuccess && toast.success(Notify,{data : {msg : "Service photo uploaded successfully!!"}, autoClose: 1000}) && serviceUploadReset()
+    }
 
     useEffect(() => {
-      isDestinationImageError && alert(`Destination Photo upload error!!`)
-      isDestinationImageDeletedError && alert(`Destination Photo delete error!!`)
-      isDestinationImageSuccess && alert(`Destination photo uploaded successfully!!`)
-      isDestinationImageDeletedSuccess && alert(`Destination Photo deleted successfully!!`)
-      isServiceImageDeletedError && alert("Service photo delete error!!")
-      isServiceImageDeletedSuccess && alert("service photo deleted successfully!!")
-      isServiceImageError && alert("Service photo upload error!!")
-      isServiceImageSuccess && alert ("Service photo uploaded successfully!!")
+      
+      notification()
     },[isDestinationImageDeletedError, 
         isDestinationImageDeletedSuccess,
         isDestinationImageError, 
@@ -82,14 +92,14 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
                 <div className='text-4xl  font-garamond'>Add Images :</div>
             {option === "service" ?
             <Button 
-            children="Details"
+            children="< Back"
             size='sm'
             onClick={() => setBtnVisible(prev => !prev)}
             variant='outline'/>
             :
             <Button 
-            children="Details"
-            size='md'
+            children="< Back"
+            size='sm'
             onClick={() => navigate(-1)}
             variant='secondary'/>
 }
@@ -118,7 +128,7 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
                             <FormField
                             label="Select images"
                             type="file"
-                            onChange={(e) => handlePreview(e)}
+                            onChange={handlePreview}
                             className=" hidden"
                             labelClassName="text-sm font-medium text-gray-600 bg-gray-200 px-3 pb-2 cursor-pointer rounded-md "
                             />
@@ -143,7 +153,8 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
                                     <Button 
                                     size='sm' 
                                     variant='delete' 
-                                    children="Delete" 
+                                    children="Delete"
+                                    loading = {isServiceImageDeleting || isDestinationImageDeleting} 
                                     onClick={() => handlePhotoDelete(image)} 
                                     />
                                     </li>)        
@@ -153,8 +164,12 @@ const PhotoUpload = ({option, details:serviceDetails, setBtnVisible}) => {
         
           </div>
           <div className='mt-20'>
-          <Button children="Submit" className='w-full ' 
+
+          <Button 
+          children="Submit" 
+          className='w-full ' 
           onClick={handlePhotoUpload} 
+          loading ={isServiceImageUploading || isDestinationImageUploading}
         />
           </div>
 

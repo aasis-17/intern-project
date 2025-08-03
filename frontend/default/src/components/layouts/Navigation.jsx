@@ -1,8 +1,8 @@
-import React from 'react'
+
 import { NavLink } from 'react-router'
 
 const Navigation = ({children, className, navClassName}) => {
-  console.log(children)
+
   return (
     <>
         <ul className={`${className}`}>

@@ -1,5 +1,4 @@
-import React, { useContext } from 'react'
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react'
 import FormField from '../../../../components/fields/FormField.jsx';
 import { useForm } from "react-hook-form"
 import RouteLocate from '../../../../components/map/MapRouting.jsx';
@@ -10,6 +9,9 @@ import { latLng } from 'leaflet';
 import Button from '../../../../components/button/Button.jsx';
 import PhotoUpload from '../../destinations/components/PhotoUpload.jsx';
 import { useGetAllDestinationNameQuery, useRemoveServiceMutation, useUpdateServiceDataMutation, useUpgradeToServiceMutation } from '../../../../services/apiSlice.js';
+import { toast } from 'react-toastify';
+import Notify from '../../../../layouts/toast/Notify.jsx';
+import Loader from '../../../../layouts/loader/Loader.jsx';
 
 const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
     const [visible, setVisible] = useState(() => option !== "edit" )
@@ -18,7 +20,6 @@ const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
 
     const {state}= useLocation()
 
-    console.log(state)
     const filter = option === "edit" ? filterState : state
 
     const navigate = useNavigate()
@@ -30,14 +31,16 @@ const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
     })
 
     const {data, isSuccess, isLoading} = useGetAllDestinationNameQuery()
-    console.log(data)
 
-    const [removeService, {isSuccess : removeSuccess, isError : removeError}] = useRemoveServiceMutation()
+    const [removeService, {reset : serviceRemovedReset ,isSuccess : isServiceRemovedSuccess, isError : isServiceRemovedError, error : serviceRemovedError, isLoading : isServiceRemoving}] = useRemoveServiceMutation()
+
+    const [upgrade, {reset : serviceUpgradeReset,isSuccess:isServiceUpgradeSuccess, isError : isServiceUpgradeError, error : serviceUpgradeError, isLoading : isSerivceUpgrading}] = useUpgradeToServiceMutation()
+
+    const [update, {reset : serviceUpdateReset , isError : isServiceUpdateError, isSuccess : isServiceUpdateSuccess, error : serviceUpdateError, isLoading : isServiceUpdating}] = useUpdateServiceDataMutation()
 
     let locations = isSuccess ? data.data.map(destination => {
       return {name : destination.destinationName,_id : destination._id, latLng : {lat : destination.destinationMapCoordinates.latitude, lng :destination.destinationMapCoordinates.longitude}}
     }) : []
-     console.log( locations)
 
     const {register ,handleSubmit, reset} = useForm()
   
@@ -60,9 +63,6 @@ const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
          province.name === e.target.value && setMapState(prev => ({...prev, province : province.latLng}))
       })
     }
-    const [upgrade, { isError, isSuccess:upgradingSuccess}] = useUpgradeToServiceMutation()
-
-    const [update, { isError : updateError, isSuccess : updateSuccess}] = useUpdateServiceDataMutation()
 
     const mutation =  async(data) => {
         const formData = new FormData()
@@ -80,7 +80,6 @@ const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
         formData.append("serviceDestination",mapState.region)
 
         if(option === "edit"){
-          console.log(formData.get("serviceDestination"))
           const datas = {...data, serviceDestination : mapState.region, latitude : mapState.position.lat, longitude :mapState.position.lng }
            await update({serviceId:serviceDetails._id, formData : datas, filter})
         }else{
@@ -88,16 +87,20 @@ const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
         }    
       }
 
-      useEffect(()=>{
-        isError && alert(`service upgrade error!!`)
-        updateError && alert(`service update eror!!`)
-        upgradingSuccess && alert(`service upgrade successfully!!`)
-        updateSuccess && alert(`service updated successfully!!`)
-        removeSuccess && alert(`service deleted successfully!!`)
-        removeError && alert(`service error while removing!!`)
-      },[isError, upgradingSuccess, updateError, updateSuccess, removeSuccess, removeError])
+      const notification = () =>{
+        isServiceUpgradeError && toast.error(Notify,{data : {msg : serviceUpgradeError?.data?.message ||`service upgrade error!!` }, autoClose : 1000}) && serviceUpgradeReset()
+        isServiceUpdateError && toast.error(Notify,{data : {msg : serviceUpdateError?.data?.message||`service update eror!!` }, autoClose : 1000}) && serviceUpdateReset()
+        isServiceUpgradeSuccess && toast.success(Notify,{data : {msg : `service upgrade successfully!!`}, autoClose : 1000}) && serviceUpgradeReset()
+        isServiceUpdateSuccess && toast.success(Notify,{data : {msg : `service updated successfully!!`}, autoClose : 1000}) && serviceUpdateReset()
+        isServiceRemovedSuccess && toast.success(Notify,{data : {msg : `service deleted successfully!!`}, autoClose : 1000}) && serviceRemovedReset()
+        isServiceRemovedError && toast.error(Notify, {data : {msg : serviceRemovedError?.data?.message||`service error while removing!!` }, autoClose : 1000}) && serviceRemovedReset()
+      }
 
-      if(isLoading) return <div>Loading..</div>
+      useEffect(()=>{
+       notification()
+      },[isServiceRemovedError, isServiceRemovedSuccess, isServiceUpdateSuccess, isServiceUpdateError, isServiceUpgradeError, isServiceUpgradeSuccess])
+
+      if(isLoading) return <Loader />
 
    return(
    <div className=' flex-1'>
@@ -105,7 +108,7 @@ const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
     : (
          <form onSubmit={ handleSubmit(mutation) } className=" h-full  flex flex-col justify-evenly">
           <div className='flex justify-between'>
-                <div className='text-4xl font-garamond font-medium mb-3'>{option ==="edit" ? "Service Details" : "Details"}</div>
+                <div onClick={()=>navigate(-1)} className='cursor-pointer text-4xl font-garamond font-medium mb-3'>{option ==="edit" ? "< Service Details" : "< Details"}</div>
               <div className='flex gap-5 p-2'>
                 {option === "edit" &&
                 <Button 
@@ -266,6 +269,7 @@ const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
           {visible   && (
             <>
           <Button
+          loading={isServiceUpdating || isSerivceUpgrading}
           type="submit"
           className='w-full my-3'
          children= {`${option === "edit" && "Save" || option ==="admin" && "Add service" || "Create Page as Service " }`}
@@ -273,6 +277,7 @@ const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
           {option === "edit" && (
           <Button
             children="Delete service"
+            loading={isServiceRemoving}
             onClick={()=> removeService({serviceId : serviceDetails._id, filter})}
             size='sm'
             variant= "delete" 

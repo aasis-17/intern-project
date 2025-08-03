@@ -1,26 +1,35 @@
-import {useState, useCallback} from 'react'
-import { useDebounce } from '../../../utiles/debounce'
-import Button from '../../../components/button/Button'
-import FormField from '../../../components/fields/FormField'
+import { useQuery } from '@tanstack/react-query'
+import serviceOwnerService from '../../services/serviceOwnerServices'
+import destinationService from '../../services/destinationService'
+import Loader from '../../components/loader/Loader'
 import { useNavigate } from 'react-router'
-import { MdCheckCircle, MdOutlineError } from "react-icons/md";
-import { useGetAllDestinationNameQuery, useGetDestinationsQuery, useGetServicesQuery } from '../../../services/apiSlice'
-import Loader from '../../../layouts/loader/Loader'
+import { useState } from 'react'
+import { useDebounce } from '../../utiles/debounce'
+import FormField from '../../components/form/FormField'
+import Button from '../../components/Button'
+import Error from '../Error'
 
-const AdminServices = () => {
+const Services = () => {
 
-    const navigate = useNavigate()
+   const navigate = useNavigate()
 
     const [filter, setFilter] = useState({
         search : "",
-        option : "",
+        option : "approved",
         serviceDestination : ""
     })
-      const {data : services, isLoading, isError, error} = useGetServicesQuery(filter)
+      const {data : services, isLoading, isError, error} = useQuery({
+        queryKey :["services", filter.search, filter.option, filter.serviceDestination],
+        queryFn : () => serviceOwnerService.getAllServices(filter),
+        // staleTime : 2 * 60000
+      })
 
-      const {data} = useGetAllDestinationNameQuery()
+      console.log(isError)
 
-      const destinations = data?.data
+    const {data : destinations, isLoading : isDestinationLoading}= useQuery({
+      queryKey : ["destinations"],
+      queryFn :  () => destinationService.getAllDestinationName()
+    })
 
     const handleSearch = (e) =>{
         const {name, value} = e.target
@@ -28,13 +37,15 @@ const AdminServices = () => {
       }
 
     const debounceQuery = useDebounce(handleSearch, 400)
+    if(isDestinationLoading) return <Loader />
+    if(isError) return <Error />
+
   return (
-    <div className="p-8 flex-1">
+    <div className="p-8 flex-1" >
      
-      <div className='flex justify-between'>
-          <div onClick={()=> navigate(-1)} className='text-4xl font-garamond font-medium mb-3 cursor-pointer'> {"< Services"} </div>
-            <Button onClick={()=> navigate(`/admin/service/upload`,{state:filter})}  variant='outline'  className='mb-3' children="Add Service" />
-            </div>
+        <div className='flex justify-between'>
+          <div onClick={()=> navigate(-1)} className='text-4xl font-garamond font-medium mb-3 cursor-pointer'> {"< Services"} </div>     
+        </div>
 
  {/* Search and Filter Section */}
  <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -63,24 +74,16 @@ const AdminServices = () => {
   ))}
 </select>
 
-<select
-  name="option"
-  onChange={(e) => debounceQuery(e)}
-  className="p-2 border border-gray-300 rounded-lg"
->
-    <option value="">Select status</option>
-    <option value="pending">pending</option>
-    <option value="approved">approved</option>
-    <option value="rejected">rejected</option>
-</select>
+
 </div>
 
       {/* services Cards Grid */}
       <div >
         {isLoading ? <Loader size='lg' /> :
         (
+            
         <>
-        {services[0] ? services.map((service) => (
+        {services[0] ? services?.map((service) => (
           <div key={service._id} className='shadow-md flex justify-between items-center h-32 mb-3'>
           <div  className={`h-full w-[35%] bg-red-50   rounded overflow-hidden shadow-lg relative`}>
           {/* Image Container */}
@@ -104,7 +107,7 @@ const AdminServices = () => {
           </div>
 
           </div>
-          <span className='text-sm '>Status : {service.isApproved === "approved" ? <MdCheckCircle className="text-green-500 me-1 dark:text-green-300 inline" /> : <MdOutlineError className="text-amber-500 me-1 dark:text-amber-300 inline" />}<span >{service.isApproved.toUpperCase()}</span> </span>
+          {/* <span className='text-sm '>Status : {service.isApproved === "approved" ? <MdCheckCircle className="text-green-500 me-1 dark:text-green-300 inline" /> : <MdOutlineError className="text-amber-500 me-1 dark:text-amber-300 inline" />}<span >{service.isApproved.toUpperCase()}</span> </span> */}
           <div className='mr-5 '>
             <Button 
               onClick={() =>{
@@ -118,6 +121,7 @@ const AdminServices = () => {
         </div>
         )) : (<div className='text-center mt-3'>No services avaliable!!</div>)}
         </>)
+        
 }
 
       </div>
@@ -125,4 +129,4 @@ const AdminServices = () => {
   )
 }
 
-export default AdminServices
+export default Services

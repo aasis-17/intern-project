@@ -1,45 +1,58 @@
 import PieChart from "../../../../components/charts/PieChart.jsx";
 import { pieChartOptions } from "../../../../variables/charts.js";
 import Card from "../../../../components/card";
-import { useGetAllDestinationNameQuery, useTotalServiceCountMutation } from "../../../../services/apiSlice.js";
+import { useGetAllDestinationNameQuery,  useTotalServiceCountQuery } from "../../../../services/apiSlice.js";
 import { useState } from "react";
+import { useCallback } from "react";
 
-const PieChartCard = ({data}) => {
-//   const pieChartData = Object.values(data)
-//   const totalCount = Number(data.totalDestinationCount + data.totalUserCount + data.totalServiceCount)
-//   const percentage = {
-//     destination : Number((data.totalDestinationCount / totalCount) * 100).toFixed(0),
-//     service : Number((data.totalServiceCount / totalCount) * 100).toFixed(0),
-//     user : Number((data.totalUserCount / totalCount) * 100).toFixed(0)
-//   }
-// console.log(pieChartData)
+const PieChartCard = () => {
 
-  const [pieChartData, setPieChartData] = useState()
+  const [destination, setDestination] = useState("")
 
   const {data : destinationsName, isLoading, isError} = useGetAllDestinationNameQuery()
 
-  const [serviceMutation,{data, isLoading:isServiceMutationLoading, isError : isServiceMutationError}] = useTotalServiceCountMutation()
+  const {data, isLoading:isServiceLoading, isError : isServiceError} = useTotalServiceCountQuery({serviceDestination : destination})
 
-  const handleChange = (e) =>{
+  let pieChartData = [0,0,0]
+
+  if(!data?.data?.length) pieChartData = [0, 0, 0]
+
+    data?.data.forEach(type => {
+    type._id === "Hotel" &&  pieChartData.splice(0, 1, type.count) 
+    type._id === "Restaurent" &&   pieChartData.splice(1, 1, type.count ) 
+    type._id === "HomeStay" && pieChartData.splice(2, 1, type.count) 
+  })
+
+
+  const precentage = 
+    (array, serviceType)=>{
+    const totalcount = array.reduce((acc, type) => acc += type, 0 )
+    if (serviceType === "Hotel") return  Number((array[0] / (totalcount) * 100).toFixed(1))
+    if (serviceType === "Restaurent")return Number((array[1] / (totalcount) * 100).toFixed(1))
+    if (serviceType === "HomeStay") return Number((array[2] / (totalcount) * 100).toFixed(1))
+  }
+console.log(precentage(pieChartData, "Hotel") || 0)
+
+  const handleChange =(e) => {
     e.preventDefault()
-    serviceMutation({serviceDestination : e.target.value})
+    setDestination({serviceDestination : e.target.value})
   }
 
-if(isLoading) return <p>Loading..</p>
+if(isServiceLoading) return <p>Loading..</p>
 
   return (
     <Card extra="rounded-[20px] p-3">
       <div className="flex flex-row justify-between px-3 pt-2">
         <div>
           <h4 className="text-lg font-bold text-navy-700 dark:text-white">
-             Pie Chart
+             Services 
           </h4>
         </div>
 
         <div className="mb-6 flex items-center justify-center">
           <select onChange={handleChange} className="mb-3 mr-2 flex items-center justify-center text-sm font-bold text-gray-600 hover:cursor-pointer dark:!bg-navy-800 dark:text-white">
               <option value="">Select Destination </option>
-            {destinationsName.data.map((destination) =>{
+            {destinationsName?.data?.map((destination) =>{
               return (
                 <option key={destination._id} value={destination.destinationName}>{destination.destinationName}</option>
               )
@@ -56,10 +69,10 @@ if(isLoading) return <p>Loading..</p>
         <div className="flex flex-col items-center justify-center">
           <div className="flex items-center justify-center">
             <div className="h-2 w-2 rounded-full bg-brand-500" />
-            <p className="ml-1 text-sm font-normal text-gray-600">Destinations</p>
+            <p className="ml-1 text-sm font-normal text-gray-600">Hotel</p>
           </div>
           <p className="mt-px text-xl font-bold text-navy-700  dark:text-white">
-            {percentage.destination}%
+            {precentage(pieChartData, "Hotel") || 0 }%
           </p>
         </div>
 
@@ -68,20 +81,20 @@ if(isLoading) return <p>Loading..</p>
         <div className="flex flex-col items-center justify-center">
           <div className="flex items-center justify-center">
             <div className="h-2 w-2 rounded-full bg-[#6AD2FF]" />
-            <p className="ml-1 text-sm font-normal text-gray-600">Services</p>
+            <p className="ml-1 text-sm font-normal text-gray-600">Restaurent</p>
           </div>
           <p className="mt-px text-xl font-bold text-navy-700 dark:text-white">
-            {percentage.service}%
+            {precentage(pieChartData, "Restaurent")|| 0}%
           </p>
         </div>
         <div className="h-11 w-px bg-gray-300 dark:bg-white/10" />
         <div className="flex flex-col items-center justify-center">
           <div className="flex items-center justify-center">
             <div className="h-2 w-2 rounded-full bg-[#EFF4FB]" />
-            <p className="ml-1 text-sm font-normal text-gray-600">Users</p>
+            <p className="ml-1 text-sm font-normal text-gray-600">HomeStay</p>
           </div>
           <p className="mt-px text-xl font-bold text-navy-700 dark:text-white">
-            {percentage.user}%
+           {precentage(pieChartData, "HomeStay")|| 0}%
           </p>
         </div>
       </div>

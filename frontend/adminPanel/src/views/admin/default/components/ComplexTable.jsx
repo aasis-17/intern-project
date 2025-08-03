@@ -1,8 +1,8 @@
 import React from "react";
+import { useCallback } from "react";
 import CardMenu from "../../../../components/card/CardMenu";
 import Card from "../../../../components/card";
 import Progress from "../../../../components/progress";
-import { MdCancel, MdCheckCircle, MdOutlineError } from "react-icons/md";
 
 import {
   createColumnHelper,
@@ -11,14 +11,61 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { useGetDestinationsQuery, useGetServicesQuery } from "../../../../services/apiSlice";
+import { useState } from "react";
+import { useEffect } from "react";
 
 const columnHelper = createColumnHelper();
 
 // const columns = columnsDataCheck;
-export default function ComplexTable(props) {
-  const { tableData } = props;
+export default function ComplexTable() {
+
   const [sorting, setSorting] = React.useState([]);
-  let defaultData = tableData;
+  
+
+  const [state, setState] = useState({
+    reviewSortType : "dec",
+    option : "destinations",
+    defaultData : []
+  })
+
+  const {data : services, isLoading, isSuccess : isServiceSuccess, isError} = useGetServicesQuery({reviewSort : state.reviewSortType}, {skip : state.option !== "services"})
+  const {data : destinations, isSuccess : isDestinationSuccess, isLoading : isDestinationLoading} = useGetDestinationsQuery({reviewSort : state.reviewSortType}, {skip : state.option !== "destinations"})
+  
+  const handleChange = (e) =>{
+    const {name, value} = e.target
+    setState((prev) => {
+      return {...prev, [name] : value }
+    })
+  }
+
+useEffect(()=>{
+const data = state.option === "services" ? services?.reduce((acc, service) => {
+    acc.push( {
+    name: service.serviceName,
+    reviewSubmited: service.reviews?.length,
+    // date: "24.Jan.2021",
+    avgReview: service.avgReview || 0
+  })
+  return acc
+},[])
+  :
+
+  destinations?.destinations.reduce((acc, destination) => {
+     acc.push( {
+    name: destination.destinationName,
+    reviewSubmited: destination.reviews?.length,
+    // date: "24.Jan.2021",
+    avgReview: destination.avgReview || 0
+    }
+    )
+    return acc
+  }
+  ,[])
+
+  setState(prev => ({...prev, defaultData : data || []}))
+  },[state.option, isServiceSuccess, isDestinationSuccess]) 
+
   const columns = [
     columnHelper.accessor("name", {
       id: "name",
@@ -26,61 +73,61 @@ export default function ComplexTable(props) {
         <p className="text-sm font-bold text-gray-600 dark:text-white">NAME</p>
       ),
       cell: (info) => (
-        <p className="text-sm font-bold text-navy-700 dark:text-white">
+        <>
           {info.getValue()}
-        </p>
+        </>
       ),
     }),
-    columnHelper.accessor("status", {
-      id: "status",
+    columnHelper.accessor("reviewSubmited", {
+      id: "reviewSubmited",
       header: () => (
         <p className="text-sm font-bold text-gray-600 dark:text-white">
-          STATUS
+          SUBMITED REVIEWS
         </p>
       ),
       cell: (info) => (
         <div className="flex items-center">
-          {info.getValue() === "Approved" ? (
-            <MdCheckCircle className="text-green-500 me-1 dark:text-green-300" />
-          ) : info.getValue() === "Disable" ? (
-            <MdCancel className="text-red-500 me-1 dark:text-red-300" />
-          ) : info.getValue() === "Error" ? (
-            <MdOutlineError className="text-amber-500 me-1 dark:text-amber-300" />
-          ) : null}
           <p className="text-sm font-bold text-navy-700 dark:text-white">
             {info.getValue()}
           </p>
         </div>
       ),
     }),
-    columnHelper.accessor("date", {
-      id: "date",
+    // columnHelper.accessor("date", {
+    //   id: "date",
+    //   header: () => (
+    //     <p className="text-sm font-bold text-gray-600 dark:text-white">DATE</p>
+    //   ),
+    //   cell: (info) => (
+    //     <p className="text-sm font-bold text-navy-700 dark:text-white">
+    //       {info.getValue()}
+    //     </p>
+    //   ),
+    // }),
+    columnHelper.accessor("avgReview", {
+      id: "avgReview",
       header: () => (
-        <p className="text-sm font-bold text-gray-600 dark:text-white">DATE</p>
+        
+          <p className="text-sm font-bold text-gray-600 dark:text-white">
+          AVERAGE REVIEW
+        </p>
+        
+
       ),
       cell: (info) => (
-        <p className="text-sm font-bold text-navy-700 dark:text-white">
-          {info.getValue()}
-        </p>
-      ),
-    }),
-    columnHelper.accessor("progress", {
-      id: "progress",
-      header: () => (
-        <p className="text-sm font-bold text-gray-600 dark:text-white">
-          PROGRESS
-        </p>
-      ),
-      cell: (info) => (
+        
         <div className="flex items-center">
-          <Progress width="w-[108px]" value={info.getValue()} />
+          <Progress color = {info.getValue() < 2 && "red" || info.getValue() > 2 && info.getValue() < 3 && "orange" || "green"} width="w-[108px]" value={info.getValue()} />
         </div>
       ),
     }),
   ]; // eslint-disable-next-line
-  const [data, setData] = React.useState(() => [...defaultData]);
+  // const [data, setData] = React.useState(() => [...defaultData]);
+
+  // useEffect(()=> setData(defaultData),[isDestinationSuccess, isServiceSuccess])
+
   const table = useReactTable({
-    data,
+    data : state.defaultData,
     columns,
     state: {
       sorting,
@@ -90,22 +137,30 @@ export default function ComplexTable(props) {
     getSortedRowModel: getSortedRowModel(),
     debugTable: true,
   });
+
   return (
     <Card extra={"w-full h-full px-6 pb-6 sm:overflow-x-auto"}>
       <div className="relative flex items-center justify-between pt-4">
         <div className="text-xl font-bold text-navy-700 dark:text-white">
-          Complex Table
+          Review Table
         </div>
-        <CardMenu />
+        {/* <CardMenu /> */}
+        <select defaultValue={state.option} name="option" className="outline-none" onChange={handleChange}>
+          <option value={"services"}> Services</option>
+          <option value={"destinations"}>Destinations</option>
+        </select>
       </div>
-
+      {  isDestinationLoading || isLoading ? <>loading</> :  
+        
       <div className="mt-8 overflow-x-scroll xl:overflow-x-hidden">
         <table className="w-full">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="!border-px !border-gray-400">
-                {headerGroup.headers.map((header) => {
-                  return (
+              <tr
+               key={headerGroup.id} 
+               className="!border-px !border-gray-400">
+                {headerGroup.headers.map((header) => { 
+                 return (
                     <th
                       key={header.id}
                       colSpan={header.colSpan}
@@ -121,12 +176,13 @@ export default function ComplexTable(props) {
                           asc: "",
                           desc: "",
                         }[header.column.getIsSorted()] ?? null}
+
                       </div>
                     </th>
-                  );
-                })}
+                    ); 
+                 })} 
               </tr>
-            ))}
+             ))} 
           </thead>
           <tbody>
             {table
@@ -154,6 +210,7 @@ export default function ComplexTable(props) {
           </tbody>
         </table>
       </div>
+}
     </Card>
   );
 }

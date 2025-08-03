@@ -14,7 +14,7 @@ const Settings = () => {
   console.log(state)
 
   const {data : serviceDetails, isLoading, isError, error} = useQuery({
-    queryKey : ["serviceDetails"],
+    queryKey : ["serviceDetails", state.userData._id],
     queryFn :() => {
      return serviceOwnerService.getServiceProfileByUserId(state.userData._id)
     }
@@ -86,8 +86,15 @@ const Settings = () => {
         <section id="pages" className="mb-10">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Pages</h2>
 
-          
-           <div className="bg-white p-6 rounded-lg shadow-md">
+          {state.userData?.role === "serviceOwner" ?
+          <div className='bg-white p-6 rounded-lg shadow-md'>
+          <ServiceOwner details={serviceDetails} option="edit" />
+          </div>
+
+
+        :
+        (
+          <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className='text-3xl font-semibold'>Create Page</h3>
             <div className='mt-5'>
               <h3>If you are owner of any hotels, restaurent, that lies near any destination.<br>
@@ -98,9 +105,9 @@ const Settings = () => {
                 (
                   <div className='bg-white rounded-md p-3 w-full shadow-lg '>
                     <div className='flex justify-between items-center'>
-                    <span>{ "Your request has been submitted!!"
-                    || serviceDetails.isApproved === "approved" && "You have created service page!!"
-                    || serviceDetails.isApproved === "rejected" && "Your request has been rejected!!"
+                    <span>{ 
+                   serviceDetails.isApproved === "rejected" && "Your request has been rejected!!"
+                    || "Your request has been submitted!!"
                      }</span>
                      <span className='text-sm'>Status : <span className={`${serviceDetails.isApproved === "approved" ? "text-green-500" : "text-red-500"} text-yellow-500`}>{serviceDetails.isApproved}</span> </span>
                      <Button
@@ -124,6 +131,9 @@ const Settings = () => {
               </div>
             </div>
           </div> 
+        )}
+
+
         </section>
 
         {/* Billing Section */}

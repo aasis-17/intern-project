@@ -48,7 +48,6 @@ export default function Admin(props) {
     return routes.map((prop, key) => {
       if (prop.layout === "/admin") {
         if(prop.secondary){
-          
           return(
             <Route path={`/${prop.path}`} element={prop.component} key={key} >
               {prop.children.map((child, key) => {

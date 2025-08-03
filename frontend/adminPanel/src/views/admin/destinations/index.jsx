@@ -3,7 +3,9 @@ import Button from "../../../components/button/Button";
 import FormField from "../../../components/fields/FormField";
 import { useGetDestinationsQuery, useDeleteDestinationMutation } from "../../../services/apiSlice";
 import { useDebounce } from "../../../utiles/debounce";
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import Loader from "../../../layouts/loader/Loader";
+import { toast } from "react-toastify";
 
 const Destination = () => {
 
@@ -16,14 +18,20 @@ const Destination = () => {
       sortType : "dec"
     })
 
-    const {data, isLoading, isError, isSuccess} = useGetDestinationsQuery(filter)
+    const {data, isLoading, isError} = useGetDestinationsQuery(filter)
 
-    const [deleteDestination, {isLoading : deleting, isError: isdeleteError}] = useDeleteDestinationMutation()
+    const [deleteDestination, {isSuccess : isDestinationDeleteSuccess, isLoading : isDestinationDeleteLoading, isError: isDestinationDeleteError, error : destinationDeleteError}] = useDeleteDestinationMutation()
 
-    const handleSearch = (e) =>{
+    useEffect(()=>{
+      isDestinationDeleteSuccess 
+      && toast.success(Notify, {data : {msg : "Destination deleted successfully!!"}, autoClose : 1000}) 
+      isDestinationDeleteError && toast.error(Notify, {data : {msg : destinationDeleteError?.data?.message || "Error while removing destination!!"}, autoClose : 1000})
+    },[isDestinationDeleteError, isDestinationDeleteSuccess])
+
+    const handleSearch = useCallback((e) =>{
       const {name, value} = e.target
       setFilter(prev => ({...prev, [name] : value}))
-    }
+    },[])
 
     const destinations = data?.destinations
     const debounceQuery = useDebounce(handleSearch, 400)
@@ -40,15 +48,14 @@ const Destination = () => {
         "Koshi"
       ];
 
-  if(isLoading) return <div>Loading...</div>
+  if(isLoading) return <Loader />
 
   return (
     <div className="mt-3 grid h-full grid-cols-1 gap-5 ">
     <div className="p-8 flex-1">
      
       <div className='flex justify-end'>
-          {/* <div className='text-4xl font-garamond font-medium mb-3'>Destinations  
-            </div> */}
+
             <Button onClick={()=> navigate(`/admin/destinations/upload`,{state : filter})} variant='secondary'  className='mb-3 ' children=" + Add Destination" />
             </div>
 

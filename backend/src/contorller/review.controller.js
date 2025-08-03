@@ -123,13 +123,14 @@ export const getReviews = asyncHandler( async(req, res) =>{
     const reviews = await Review.aggregate([{
         $match : filter
     },
+    // {
+    //     $addFields : {
+    //         avgReview : {
+    //             $avg : "$rating"
+    //         }
+    //     }
+    // },
     {
-        $addFields : {
-            avgReview : {
-                $avg : "$rating"
-            }
-        }
-    },{
         $lookup :{
             from : "users",
             localField : "creator",

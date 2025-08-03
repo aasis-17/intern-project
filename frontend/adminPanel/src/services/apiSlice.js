@@ -1,12 +1,13 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logoutUser,  setCredentials } from "../store/authSlice";
+import { review } from "./review";
 
 const baseQuery = fetchBaseQuery({
     baseUrl : "http://localhost:8000/api/v1/",
     credentials : "include",
     prepareHeaders : (headers, {getState}) => {
         const token = getState().auth.accessToken
-        console.log("accessToken",token)
+       
         if(token){
             headers.set(`Authorization`, `Bearer${token}`)
         }
@@ -16,15 +17,14 @@ const baseQuery = fetchBaseQuery({
 
 const baseQueryWithReAuth = async(args, api, extraOption) => {
     let result = await baseQuery(args, api, extraOption)
-    console.log("baseQueryWithreauthresult",result)
+    
 
      if(result?.error?.status >= 401){
         const token = await baseQuery(
-            {url :"auth/refresh",
-                 method : "POST"}
-                 , api,
+            {url :"auth/refresh", method : "POST"},
+                  api,
                   extraOption)
-        console.log("refrehToken",token)
+        
 
         if(token?.data?.data){
             api.dispatch(setCredentials(token.data.data))
@@ -61,7 +61,7 @@ export const apiSlice = createApi({
             }
         }),
         getDestinations : builder.query ({
-            query({search="", region="", page="", sortType=""}){
+            query({search="", region="", page=1, sortType="", reviewSort}){
                 return {
                     url : `destination`,
                     method : "GET",
@@ -69,7 +69,8 @@ export const apiSlice = createApi({
                         search,
                         region,
                         page,
-                        sortType
+                        sortType, 
+                        reviewSort
                     }
                 }
             },
@@ -148,7 +149,7 @@ export const apiSlice = createApi({
 
         updateDestination : builder.mutation({
             query({id :destinationId, formData:data}){
-                console.log("formData", data, destinationId)
+                
                 return {
                     url : `destination/${destinationId}`,
                     method : "PATCH",
@@ -157,7 +158,7 @@ export const apiSlice = createApi({
             },
             invalidatesTags: (result, error, { id }) => [{ type: "Destination", id }], // this refetches 
             async onQueryStarted({id, state}, { dispatch, queryFulfilled }) {
-                console.log(state)
+               
                 try {
                   const { data: updatedDestination } = await queryFulfilled
                  
@@ -179,7 +180,7 @@ export const apiSlice = createApi({
             )
           );
                 } catch(error) {
-                    console.log("error while updating destination",error)
+                  
                 }
               },
         }),
@@ -195,12 +196,10 @@ export const apiSlice = createApi({
             async onQueryStarted({id},{dispatch, queryFulfilled}){
                 try {
                     const {data : routeAdded} = await queryFulfilled
-                    console.log("route added",routeAdded)
+                    
                     dispatch(
                         apiSlice.util.updateQueryData("getDestinationById",id,(draft) => {
-                            
-                            Object.assign(draft, routeAdded.data)
-                            console.log("added to draft",JSON.parse(JSON.stringify(draft)))
+                            return {...draft, routePlan : routeAdded.data.routePlan}
                         })
                     )
                 } catch (error) {
@@ -210,7 +209,7 @@ export const apiSlice = createApi({
         }),
         removeRoutePlan: builder.mutation({
             query({destinationId, routeId}){
-                console.log(destinationId, routeId)
+               
                 return{
                     url : `destination/route/${destinationId}`,
                     method : "PATCH",
@@ -220,11 +219,12 @@ export const apiSlice = createApi({
             async onQueryStarted({destinationId},{dispatch, queryFulfilled}){
                 try {
                     const {data : updatedRoutePlan} = await queryFulfilled
-                    console.log(updatedRoutePlan)
+                    
                     dispatch(apiSlice.util.updateQueryData("getDestinationById", destinationId, (draft) =>{
+                    
+                        return {...draft, routePlan : updatedRoutePlan.data.routePlan}
+                       
                         
-                        Object.assign(draft, updatedRoutePlan.data)
-                        console.log(JSON.parse(JSON.stringify(draft)))
                     }))
                 } catch (error) {
                     console.log(error)
@@ -242,9 +242,9 @@ export const apiSlice = createApi({
             async onQueryStarted({destinationId}, {dispatch, queryFulfilled}){
                 try {
                     const {data} = await queryFulfilled
-                    console.log(data)
-                    dispatch(apiSlice.util.updateQueryData("getDestinationById",destinationId, (draft) => {
-                        Object.assign(draft, data.data)
+                   
+                    dispatch(apiSlice.util.updateQueryData("getDestinationById", destinationId, (draft) => {
+                        return {...draft, destinationImages : data.data.destinationImages}
                     }))
                 } catch (error) {
                     console.log(error)
@@ -263,10 +263,9 @@ export const apiSlice = createApi({
             async onQueryStarted({destinationId}, {dispatch, queryFulfilled}){
                 try{
                    const {data} = await queryFulfilled
-                   console.log(data)
+                   
                    dispatch(apiSlice.util.updateQueryData("getDestinationById", destinationId,(draft) => {
-                    Object.assign(draft, data.data)
-                
+                        return {...draft, destinationImages : data.data.destinationImages}
                    })) 
                 }catch(error){
                     console.log(error)
@@ -275,13 +274,14 @@ export const apiSlice = createApi({
         }),
 
         getServices : builder.query({
-            query({search="", option="",serviceDestination=""}){
+            query({search="", option="",serviceDestination="", reviewSort}){
                 return {
                     url : `serviceOwner`,
                     params : {
                         search,
                         option,
-                        serviceDestination
+                        serviceDestination,
+                        reviewSort 
                     }
                 }
             },
@@ -313,7 +313,7 @@ export const apiSlice = createApi({
 
         updateServiceData : builder.mutation({
             query({serviceId, formData}){
-                console.log(formData)
+                
                 return{
                     url : `serviceOwner/${serviceId}`,
                     method : "PATCH",
@@ -338,7 +338,7 @@ export const apiSlice = createApi({
                         
                         (draft) => {   
                         Object.assign(draft, data.data)
-                        console.log(JSON.parse(JSON.stringify(draft)))
+                       
                         }
                     
                 ))
@@ -383,10 +383,10 @@ export const apiSlice = createApi({
             async onQueryStarted({serviceId}, {dispatch, queryFulfilled}){
                 try {
                     const {data} = await queryFulfilled
-                    console.log(data)
+                    
                     dispatch(apiSlice.util.updateQueryData("getServiceById", serviceId, (draft) => {
                         Object.assign(draft, data.data)
-                        console.log(JSON.parse(JSON.stringify(draft)))
+                       
                     }))
                 } catch (error) {
                     console.log(error)      
@@ -404,10 +404,10 @@ export const apiSlice = createApi({
             async onQueryStarted({ serviceId}, {dispatch, queryFulfilled}){
                 try {
                     const {data} = await queryFulfilled
-                    console.log(data)
+                    
                     dispatch(apiSlice.util.updateQueryData("getServiceById", serviceId, (draft) => {
                         Object.assign(draft, data.data)
-                        console.log(JSON.parse(JSON.stringify(draft)))
+                        
                     }))
                 } catch (error) {
                     console.log(error)      
@@ -450,9 +450,9 @@ export const apiSlice = createApi({
             async onQueryStarted({serviceId}, {dispatch, queryFulfilled}){
                 try {
                     const {data} = await queryFulfilled
-                    console.log(data)
+                 
                     dispatch(apiSlice.util.updateQueryData("getServiceById" ,serviceId, (draft) => {
-                        Object.assign(draft, data.data)
+                       return {...draft, serviceImages : data.data.serviceImages}
                     }))
                 } catch (error) {
                     console.log(error)
@@ -471,9 +471,9 @@ export const apiSlice = createApi({
             async onQueryStarted({serviceId}, {dispatch, queryFulfilled}){
                 try{
                     const {data}= await queryFulfilled
-                    console.log(data)
+                    
                     dispatch(apiSlice.util.updateQueryData("getServiceById", serviceId, (draft) =>{
-                        Object.assign(draft, data.data)
+                        return {...draft, serviceImages : data.data.serviceImages}
                     }))
                 }catch(error){
                     console.log(error)
@@ -514,26 +514,30 @@ export const apiSlice = createApi({
                 }
             }
         }), 
-        totalServiceCount : builder.mutation({
+        totalServiceCount : builder.query({
             query({isApproved="", serviceDestination="", serviceType=""}){
+                
                 return {
                     url : "dashboard/service",
                     method : "GET",
                     params : {
                         isApproved,
-                        serviceDestination,
+                        serviceDestination : serviceDestination.serviceDestination,
                         serviceType
                     }
                 }
             }
-        })
+        }),
+
+         ...review(builder)
 
     })
 })
 
 export const {useGetCurrentUserQuery,
+    useGetDestinationReviewsQuery,
     useTotalCountQuery,
-    useTotalServiceCountMutation,
+    useTotalServiceCountQuery,
     useTotalUserCountMutation,
     useChangePasswordMutation,
     useUploadDestinationMutation,
@@ -554,5 +558,7 @@ export const {useGetCurrentUserQuery,
     useRejectServiceMutation,
     useRemoveServiceMutation,
     useUploadServiceImageMutation,
-    useRemoveServicePhotoMutation
+    useRemoveServicePhotoMutation,
+    useGetReviewsQuery
+    
     } = apiSlice

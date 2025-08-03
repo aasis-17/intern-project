@@ -84,10 +84,16 @@ export const approveServiceRequest = asyncHandler( async(req, res) => {
 
 export const getAllServices = asyncHandler(async(req, res) => {
 
-    const {option, serviceDestination, search} = req.query
+    const {option, serviceDestination, search, reviewSort="dec", limit=10, page=1} = req.query
     console.log(option, serviceDestination)
 
     const filter = {}
+    const sort = {}
+    const pageNo = parseInt(page)
+    const limitNo = parseInt(limit)
+    const skip = (pageNo - 1) * limitNo; //NOTE : skip no of videos 
+
+    if(reviewSort) sort.avgReview = reviewSort === "asc" ? 1 : -1
 
     if(option) filter.isApproved = option
     if(serviceDestination) filter.serviceDestination = serviceDestination
@@ -96,12 +102,64 @@ export const getAllServices = asyncHandler(async(req, res) => {
     console.log(filter)
 
     // if(!serviceRequest) throw new ApiError(400, "request missing!")
+      const services = await ServiceOwner.aggregate([{
+    
+            $match : filter
+        },
+        {
+                    
+            $lookup :{
+                from : 'users',
+                localField : "userId",
+                foreignField : "_id",
+                as : "userId",
+            }
+        },
+        {
+            $addFields : {
+                userId : {$first : "$userId"} 
+            }
+        },
+        {
+            $lookup :{
+                from : 'reviews',
+                localField : "reviews",
+                foreignField : "_id",
+                as : "reviews",
+            }
+        },
+        {
+            $addFields : {
+                avgReview : {
+                    $avg : "$reviews.rating"
+                }
+            }
+        },
+        {
+            $sort : sort
+        },
+        {
+            $skip : skip
+        },
+        {
+            $limit : limitNo
+        }
+    ]
+    )
 
-    const requests = await ServiceOwner.find(filter).populate("userId")
+    // const requests = await ServiceOwner.find(filter).populate("userId").sort(sort).limit(limitNo).skip(skip)
 
-    if(!requests) throw new ApiError(500, "Server error!!")
+    if(!services) throw new ApiError(500, "Server error!!")
 
-    return res.status(200).json(new ApiResponse(200, requests, "Service requests fetched successfully!!"))
+            const totalCount = await ServiceOwner.countDocuments(filter)
+        
+            const pagination = {
+                currentPage : pageNo,
+                totalPage : Math.ceil(totalCount / limitNo),
+                totalCount 
+            }
+
+    return res.status(200).json(new ApiResponse(200, services, "Service requests fetched successfully!!"))
 })
 
 export const rejectServiceRequest = asyncHandler(async(req, res) => {

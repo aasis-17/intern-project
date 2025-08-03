@@ -1,10 +1,13 @@
 import { useContext, useState, useRef, useEffect } from "react";
 import { AuthContext } from "../store/authContext";
-import {useMutation, useQuery} from "@tanstack/react-query"
+import {QueryClient, useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
 import serviceOwnerService from "../services/serviceOwnerServices";
 import { useParams } from "react-router";
 import userService from "../services/userService";
 import Review from "../components/Review"
+import { toast } from "react-toastify";
+import Notify from "../components/toast/Notify";
+import Button from "../components/Button";
 
 
 const UserProfile = () => {
@@ -12,6 +15,10 @@ const UserProfile = () => {
   const {state} = useContext(AuthContext)
 
   const {id} = useParams()
+
+  const queryClient = useQueryClient()
+
+  const editOption = id === state?.userData?._id || false
 
   const [image, setImage] = useState({
     userAvatar : "",
@@ -22,17 +29,16 @@ const UserProfile = () => {
 
   const [imageFile, setImageFile] = useState("")
 
-    const {data : userDetails, isLoading: dataLoading} = useQuery({
-      queryKey: ["profile"],
+    const {data : userDetails, isLoading: dataLoading, isSuccess : isUserProfileSuccess} = useQuery({
+      queryKey: ["profile", id],
       queryFn :  () => {
         if(state.userData._id === id) return state.userData
         return userService.getUserById(id)
       }
     })
-    console.log(userDetails)
      
-    const {data : serviceDetails,  isLoading, isSuccess} = useQuery({
-      queryKey : ["serviceId"],
+    const {data : serviceDetails,  isLoading, isSuccess : isServiceDetailsSuccess} = useQuery({
+      queryKey : ["serviceId", id],
       queryFn : () => {
         if(state.userData._id === id && state.userData.role === "serviceOwner"){
           return serviceOwnerService.getServiceProfileByUserId(id)
@@ -41,20 +47,16 @@ const UserProfile = () => {
       },
       enabled : !!userDetails
     })
-    console.log(serviceDetails)
 
     useEffect(() => {
       // userDetails && serviceDetails && setImage(prev => ({...prev, userAvatar : userDetails?.userAvatar, serviceCoverImage : serviceDetails?.serviceCoverImage}))
       setImage(prev => ({...prev, userAvatar : userDetails?.userAvatar, serviceCoverImage : serviceDetails?.serviceCoverImage}))
-    },[isSuccess])
-
-    console.log(image)
+    },[isUserProfileSuccess, isServiceDetailsSuccess, id])
 
   const handleImage = (e, field) => {
     
     const file = e.target.files[0];
     const reader = new FileReader();
-    console.log(field)
  
    reader.onloadend = () => {
      setImage((prev) => ({ ...prev, [field]: reader.result })); 
@@ -96,27 +98,37 @@ const UserProfile = () => {
 
   const mutateAvatar = useMutation({
     mutationFn : async(data)=>{
-      await userService.updateUserAvatar(data)
+      const mutateData = await userService.updateUserAvatar(data)
+      return mutateData
     },
-    onSuccess : () => {
-      alert("User avatar updated successfully!!")
+    onSuccess : (data) => {
+      console.log(data, "mutatedata")
+      toast.success(Notify, {data : {msg : "User avatar updated successfully!!"}, autoClose : 1000})
       setImage(prev => ({...prev, editAvatar : !prev.editAvatar}))
+      queryClient.setQueryData(["profile", id], (prev) =>{
+        Object.assign(prev, data)
+      })
+      
     },
     onError : ()=>{
-      alert("Error while updating user avatar!!")
+      toast.error(Notify, {data : { msg : "Error while updating user avatar!!"} , autoClose : 1000 })
     }
   })
 
   const mutateCoverImage = useMutation({
     mutationFn : async(data)=>{
-      await serviceOwnerService.updateServiceCoverImage(serviceDetails._id, data)
+      const mutateData = await serviceOwnerService.updateServiceCoverImage(serviceDetails._id, data)
+      return mutateData
     },
-    onSuccess : () => {
-      alert("Cover image updated successfully!!")
+    onSuccess : (data) => {
+      toast.success(Notify, {data : {msg : "Cover image updated successfully!!"}, autoClose : 1000})
       setImage(prev => ({...prev, editCoverImage : !prev.editCoverImage}))
+      queryClient.setQueryData(["serviceDetails", id], (prev) =>{
+        Object.assign(prev, data)
+      })
     },
     onError : ()=>{
-      alert("Error while updating coverImage!!")
+      toast.error(Notify, {data : {msg : "Error while updating coverImage!!"}, autoClose : 1000})
     }
   })
 
@@ -127,7 +139,7 @@ if(isLoading) return <div>Loading..</div>
     <div className="min-h-screen bg-gray-50">
       {/* Cover Photo */}
      <div className={`${userDetails.role !== "user" ? "" : "h-24"} relative`}>
-     {userDetails.role === "serviceOwner" &&  
+     {userDetails?.role === "serviceOwner" &&  
       <>
         <div className="relative h-96">
         <img
@@ -145,14 +157,15 @@ if(isLoading) return <div>Loading..</div>
         
 
   <form onSubmit={(e) =>handleImageChange(e,"serviceCoverImage")}>
-
-    <label hidden={image.editCoverImage} onClick={() => toggleEdit("editCoverImage")} htmlFor="example" className="absolute top-2 right-4 px-2 py-1 bg-gray-800 text-white text-sm rounded-lg" >
+      {editOption && 
+          <label hidden={image.editCoverImage} onClick={() => toggleEdit("editCoverImage")} htmlFor="example" className="absolute top-2 right-4 px-2 py-1 bg-gray-800 text-white text-sm rounded-lg" >
       edit
-      </label>
-    {image.editCoverImage && (
+      </label>}
+
+    { image.editCoverImage && (
       <div className='absolute top-2 right-4 flex flex-col gap-3' >
-      <button  type='submit' className=" px-1 py-1  bg-gray-800 text-white text-sm rounded-lg">save</button>
-      <button type='button' onClick={() => cancelImage( "serviceCoverImage", "editCoverImage")} className=" px-1 py-1 bg-gray-800 text-white text-sm rounded-lg" >cancel</button>
+      <Button children="save" variant="noCss"  type='submit' loading={mutateCoverImage.isPending} className=" px-1 py-1  bg-gray-800 text-white text-sm rounded-lg" />
+      <Button children="cancel" variant="noCss" onClick={() => cancelImage( "serviceCoverImage", "editCoverImage")} className=" px-1 py-1 bg-gray-800 text-white text-sm rounded-lg" />
       </div>
     )}
   <input
@@ -177,13 +190,13 @@ if(isLoading) return <div>Loading..</div>
           
    <form onSubmit={(e) =>handleImageChange(e,"userAvatar")}>
 
-    <label hidden={image.editAvatar} onClick={() => toggleEdit("editAvatar")} htmlFor="avatar" className="absolute top-2 -right-3 px-2 py-1 bg-gray-800 text-white text-sm rounded-lg" >
+   { editOption && <label hidden={image.editAvatar} onClick={() => toggleEdit("editAvatar")} htmlFor="avatar" className="absolute top-2 -right-3 px-2 py-1 bg-gray-800 text-white text-sm rounded-lg" >
       edit
-      </label>
-    {image.editAvatar && (
+      </label>}
+    { image.editAvatar && (
       <div className='absolute top-2 -right-7 flex flex-col gap-3' >
-      <button  type='submit' className=" px-1 py-1  bg-gray-800 text-white text-sm rounded-lg">save</button>
-      <button type='button' onClick={() => cancelImage( "userAvatar", "editAvatar")} className=" px-1 py-1 bg-gray-800 text-white text-sm rounded-lg" >cancel</button>
+      <Button variant="noCss" loading={mutateAvatar.isPending}  type='submit' children="save" className=" px-1 py-1  bg-gray-800 text-white text-sm rounded-lg" />
+      <Button variant="noCss" children="cancel" onClick={() => cancelImage( "userAvatar", "editAvatar")} className=" px-1 py-1 bg-gray-800 text-white text-sm rounded-lg" />
       </div>
     )}
   <input
@@ -290,7 +303,7 @@ if(isLoading) return <div>Loading..</div>
         (<section className="mb-16">
           <h2 className="text-4xl font-bold text-gray-800 mb-6 text-center">What Our Guests Say</h2>
 
-          <Review reviewState="serviceId" />
+          <Review reviewState="serviceId" reviewId={id} />
 
         </section>)
         

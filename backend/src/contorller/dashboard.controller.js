@@ -38,6 +38,8 @@ export const totalServiceCount = asyncHandler(async(req, res) => {
 
     const {isApproved, serviceType, serviceDestination} = req.query
 
+    console.log(req.query)
+
     const filter = {}
 
     if(isApproved) filter.isApproved = isApproved
@@ -46,7 +48,7 @@ export const totalServiceCount = asyncHandler(async(req, res) => {
 
     if(serviceDestination) filter.serviceDestination = serviceDestination
 
-    const totalService = await ServiceOwner.find(filter)
+    // const totalService = await ServiceOwner.find(filter)
 
     const totalServiceCount = await ServiceOwner.aggregate([
         {
@@ -55,16 +57,12 @@ export const totalServiceCount = asyncHandler(async(req, res) => {
     },
     {
         $group : {
-            serviceType
+            _id : "$serviceType",
+            count : {$sum : 1 }
         }
-    },
-{
-    $addFields : {
-        restaurent : {
-            $
-        }
-    }
-}])
+    }])
 
-    return res.status(200).json(new ApiResponse(200, totalService, "Service count fetched!!"))
+    console.log(totalServiceCount)
+
+    return res.status(200).json(new ApiResponse(200, totalServiceCount, "Service count fetched!!"))
 })

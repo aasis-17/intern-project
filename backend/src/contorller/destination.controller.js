@@ -1,7 +1,8 @@
 import { ApiError, ApiResponse, asyncHandler } from "../utils/index.js";
 import { Destination } from "../model/destination.model.js";
 import { removeFileFromCloudinary, uploadFileOnCloudinary, uploadMultipleFileOnCloudinary } from "../utils/fileHandler.js";
-import { isValidObjectId, ObjectId } from "mongoose";
+import { isValidObjectId } from "mongoose";
+import mongoose from "mongoose";
 
 export const createDestination = asyncHandler( async(req, res) => {
 
@@ -196,6 +197,8 @@ export const getDestinationById = asyncHandler(async(req,res) => {
 
     const destination = await Destination.findById(destinationId).populate({path :"reviews", populate :[ "comments","creator"]})
 
+    console.log(destination)
+
     if(!destination) throw new ApiError(404, "Destination doesnot exists!!")
 
     return res.status(200).json(new ApiResponse(200, destination, "Destinaion fetched successfully!!"))
@@ -220,17 +223,19 @@ export const deleteDestination = asyncHandler(async(req, res) =>{
 
 export const getAllDestination = asyncHandler(async(req, res) => {
 
-    const { page, limit=10, search, region, sortType="dec" } = req.query
+    const { page=1, limit=10, search, region, sortType="asc", reviewSort="dec" } = req.query
 
     const filter ={}
     const sort ={}
     const pageNo = parseInt(page)
     const limitNo = parseInt(limit)
     const skip = (pageNo - 1) * limitNo; //NOTE : skip no of videos 
+    console.log(skip,"ooo" )
 
     if(search) filter.destinationName = {$regex : search, $options : "i"}
     if(region) filter.destinationRegion = {$regex : region, $options : "i"}
-    if(sortType) sort.avgReview = sortType === "asc" ? 1 : -1
+    if(sortType) sort.destinationName = sortType === "asc" ? 1 : -1
+    if(reviewSort) sort.avgReview = reviewSort === "asc" ? 1 : -1
 
     console.log(filter)
     console.log(page)
@@ -294,7 +299,7 @@ export const addRoutePlan = asyncHandler(async(req, res) => {
                 routePlan
             }
     
-    },{new : true})
+    },{new : true}).populate({path :"reviews", populate :[ "comments","creator"]})
 
     if(!destination) throw new ApiError(500, "serverError")
 
@@ -315,7 +320,7 @@ export const removeRoutePlan = asyncHandler(async(req, res) =>{
         $pull :{
             routePlan : {_id : routeId}
         }
-    },{new:true})
+    },{new:true}).populate({path :"reviews", populate :[ "comments","creator"]})
     console.log(destination)
    
     if(!destination) throw new ApiError(404, "Destination not found!!")

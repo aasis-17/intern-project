@@ -5,11 +5,19 @@ class destinationServices{
         this.uri=uri
     }
 
+    async getAllDestinationName(){
+        try {
+            const res = await axios.patch(`${this.uri}`)
+            return res.data.data
+        } catch (error) {
+            throw error.response.data
+        }
+    }
+
     async getDestination(search="",region="", sortType, page=1){
         // console.log(filter)
         try {
             const res = await axios.get(`${this.uri}?search=${search}&region=${region}&page=${page}&sortType=${sortType}`)
-            console.log(res)
             return res.data.data
         } catch (error) {
             console.log(error)

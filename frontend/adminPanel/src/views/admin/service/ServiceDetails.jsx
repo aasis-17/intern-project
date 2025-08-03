@@ -3,19 +3,23 @@ import { useLocation, useParams } from 'react-router'
 import Button from '../../../components/button/Button'
 import { useApproveServiceMutation, useGetServiceByIdQuery, useRejectServiceMutation } from '../../../services/apiSlice'
 import ServiceOwner from "./component/Service"
+import Review from '../components/Review'
+import Loader from '../../../layouts/loader/Loader'
+import { toast } from 'react-toastify'
+import Notify from '../../../layouts/toast/Notify'
 
 const ServiceDetails = () => {
     const {serviceId} = useParams()
-    console.log(serviceId)
+   
     const {state} = useLocation()
-    console.log(state, "state")
+    
     const {data : serviceDetails, isLoading, isError} = useGetServiceByIdQuery(serviceId)
 
     const [rejectMutation, {isError : rejectError, isSuccess : rejectSuccess}] = useRejectServiceMutation()
     const [approveMutation, {isError : approveError, isSuccess : approveSuccess}] = useApproveServiceMutation()
 
     const mutation = async(submit) => {
-        console.log(submit)
+        
         if(submit === "approved"){
           await approveMutation({userId : serviceDetails.userId, serviceId})
         }else{
@@ -25,13 +29,14 @@ const ServiceDetails = () => {
       }
 
     useEffect(()=>{
-      rejectError && alert("service reject error!!")
-      rejectSuccess && alert("service reject success!!")
-      approveError && alert("service approve error!!")
-      approveSuccess && alert("service approve success!!")
+      rejectError && toast.error(Notify, {data : { msg : "service reject error!!"}, autoClose : 1000})
+      rejectSuccess && toast.success(Notify ,{data : { msg : "service reject success!!"}, autoClose : 1000})
+      approveError && toast.error(Notify, {data : {msg : "service approve error!!"}, autoClose : 1000})
+      approveSuccess && toast.success(Notify, {data : {msg : "service approve success!!"}, autoClose : 1000})
     },[rejectError, rejectSuccess, approveError, approveSuccess])
   
-    if(isLoading) return <div>Loading..</div>
+    if(isLoading) return <Loader size='lg' color='secondary' />
+
   return (
     <div className='flex-1 p-7'>
         <ServiceOwner details={serviceDetails} option="edit" filterState = {state} />
@@ -52,6 +57,8 @@ const ServiceDetails = () => {
                  />
                </div>
 }
+
+  <Review reviewData={serviceDetails} />
     </div>
         
   )

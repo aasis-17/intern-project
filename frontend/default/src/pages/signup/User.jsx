@@ -1,39 +1,27 @@
-import React, { useContext } from 'react'
+import { useContext } from 'react'
 import { useState } from "react";
 import FormField from '../../components/form/FormField.jsx';
 import { useForm } from "react-hook-form"
 import authService from '../../services/authServices.js';
-import { useLocation, useNavigate } from 'react-router';
 import { AuthContext } from '../../store/authContext.jsx';
 import Button from '../../components/Button.jsx';
 import { useMutation } from '@tanstack/react-query';
 import userService from '../../services/userService.js';
 import TextField from '../../components/form/TextField.jsx';
+import { toast } from 'react-toastify';
+import Notify from '../../components/toast/Notify.jsx';
 
 const User = ({option}) => {
 
-  const [imagePreview, setImagePreview] = useState("")
   const [visible, setVisible] =useState(() => option !== "edit")
+
   const {dispatch} = useContext(AuthContext)
+
   const {register ,handleSubmit} = useForm()
+
   const authContext = useContext(AuthContext)
+
   const userDetails = authContext.state.userData
-  console.log(option)
-
-  const handlePreview = (e) => {
-
-    const file = e.target.files[0];
-    const reader = new FileReader();
- 
-   reader.onloadend = () => {
-     setImagePreview(reader.result);  
-   };
-   if (file) {
-     reader.readAsDataURL(file);
-   } 
-    // inputRef.current = file
-    // e.target.value = null 
-  }
 
   const mutation = useMutation({
     mutationFn : async(data) => {
@@ -45,21 +33,20 @@ const User = ({option}) => {
       }
     },
     onSuccess : (userData) => {
-      console.log(userData)
       if(option !== "edit")  {
-        alert("User signup successfully!!")
+        toast.success(Notify,{data : {msg : "User signup successfully!!"}, autoClose : 1000})
         dispatch({type : "login", payload : userData})  
       }
      
       else{
-        alert("User info updated successfully!!")
+        toast.success(Notify,{data : {msg : "User info updated successfully!!"}, autoClose : 1000})
         setVisible(false)
       } 
     },
     onError : () => {
-      if(option !== "edit")  alert("Error while signing user!!")
+      if(option !== "edit") toast.error(Notify, { data : {msg : "Error while signing user!!"}, autoClose : 1000})
      
-        else alert("Error while updating details!!")
+        else toast.error(Notify, {data : {msg: "Error while updating details!!"}, autoClose : 1000})
     }
   })
  
@@ -69,27 +56,10 @@ const User = ({option}) => {
         
          <form onSubmit={ handleSubmit(mutation.mutateAsync) } className=" h-full relative flex flex-col justify-evenly ml-4">
 
-          {/* {option !== "edit" && ( */}
-          {/* <div className=' absolute right-10 top-20  w-1/3 h-2/5'> */}
-          {/* <div className='border-black border-2 w-full h-full rounded-3xl overflow-hidden'>
-          <img className=' object-cover  ' src={imagePreview} alt='avatar' />
-          </div> */}
-          {/* /* Avatar  */}
-          {/* <div >
-            <FormField
-              label="Select Avatar"
-              type="file"
-              onInput={(e) => handlePreview(e)}
-              className="hidden"
-              labelClassName="block text-md bg-gray-300 text-center mt-4 cursor-pointer hover:bg-gray-400 py-2 rounded-lg font-medium text-gray-600"
-              {...register("userAvatar")}
-            />
-          </div> */}
-          {/* </div> */}
-          {/* )} */}
           <div className='flex justify-between'>
           <h1 className='text-3xl font-garamond font-medium'>{option === "edit" ? "Basic Details" : "Your Details"}</h1>
           {option === "edit" && (
+
           <Button
           children={visible ? "Cancel" : "Edit"}
           onClick={()=> setVisible(prev => !prev)}
@@ -220,6 +190,7 @@ const User = ({option}) => {
           {option !== "edit" &&(
           /* Submit Button */
           <Button
+          loading ={mutation.isPending}
             type="submit"
             className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition"
             children="Sign Up"
@@ -228,6 +199,7 @@ const User = ({option}) => {
         {option === "edit" && visible &&(
           /* Submit Button */
           <Button
+          loading={mutation.isPending}
             type="submit"
             className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition"
             children="Save"

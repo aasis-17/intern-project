@@ -1,5 +1,8 @@
 const Progress = (props) => {
-  const { value, color, width } = props;
+  const { value,color, width } = props;
+  // let color = "green"
+  // if(value < 2 ) color = "red"
+  // if(value > 2 && value < 3) color = "orange"
   return (
     <div
       className={`h-2 ${
@@ -38,7 +41,7 @@ const Progress = (props) => {
             ? "bg-gray-500 dark:bg-gray-400"
             : "bg-brand-500 dark:bg-brand-400"
         }`}
-        style={{ width: `${value}%` }}
+        style={{ width: `${(value / 5) * 100}%` }}
       />
     </div>
   );

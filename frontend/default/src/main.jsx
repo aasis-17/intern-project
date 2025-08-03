@@ -8,8 +8,9 @@ import "@fontsource/eb-garamond"
 import { AuthProvider } from "./store/authContext.jsx";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import {ToastContainer} from "react-toastify"
 
-ReactDOM.createPortal(<Modal />, document.getElementById("modal-root"))
+ReactDOM.createPortal(<Modal visible={false}/>, document.getElementById("modal-root"))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,7 @@ createRoot(document.getElementById('root')).render(
         <App />
    
       </BrowserRouter>
+      <ToastContainer />
     </AuthProvider>
   <ReactQueryDevtools initialIsOpen={false}/>
   </QueryClientProvider>
