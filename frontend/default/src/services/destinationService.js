@@ -1,4 +1,5 @@
 import axios from "axios";
+import { apiInstance } from "../axios/axios";
 
 class destinationServices{
     constructor(uri){
@@ -14,10 +15,10 @@ class destinationServices{
         }
     }
 
-    async getDestination(search="",region="", sortType, page=1){
+    async getDestination(search="",region="", sortType="asc", page=1){
         // console.log(filter)
         try {
-            const res = await axios.get(`${this.uri}?search=${search}&region=${region}&page=${page}&sortType=${sortType}`)
+            const res = await apiInstance.get(`${this.uri}?search=${search}&region=${region}&page=${page}&sortType=${sortType}`)
             return res.data.data
         } catch (error) {
             console.log(error)

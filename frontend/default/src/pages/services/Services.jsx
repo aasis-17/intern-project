@@ -27,9 +27,10 @@ const Services = () => {
       console.log(isError)
 
     const {data : destinations, isLoading : isDestinationLoading}= useQuery({
-      queryKey : ["destinations"],
+      queryKey : ["destinationName"],
       queryFn :  () => destinationService.getAllDestinationName()
     })
+    console.log(destinations,"destination name")
 
     const handleSearch = (e) =>{
         const {name, value} = e.target
@@ -37,6 +38,7 @@ const Services = () => {
       }
 
     const debounceQuery = useDebounce(handleSearch, 400)
+
     if(isDestinationLoading) return <Loader />
     if(isError) return <Error />
 
@@ -111,7 +113,7 @@ const Services = () => {
           <div className='mr-5 '>
             <Button 
               onClick={() =>{
-                navigate(`/admin/service/${service._id}`, {state :filter} )
+                navigate(`/profile/${service._id}`, {state :filter} )
                 }}
               children="Review" 
               variant='outline'

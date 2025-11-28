@@ -1,6 +1,6 @@
 import { useContext, useState, useRef, useEffect } from "react";
 import { AuthContext } from "../store/authContext";
-import {QueryClient, useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
 import serviceOwnerService from "../services/serviceOwnerServices";
 import { useParams } from "react-router";
 import userService from "../services/userService";
@@ -8,6 +8,8 @@ import Review from "../components/Review"
 import { toast } from "react-toastify";
 import Notify from "../components/toast/Notify";
 import Button from "../components/Button";
+import Loader from "../components/loader/Loader";
+import Error from "./Error";
 
 
 const UserProfile = () => {
@@ -29,7 +31,7 @@ const UserProfile = () => {
 
   const [imageFile, setImageFile] = useState("")
 
-    const {data : userDetails, isLoading: dataLoading, isSuccess : isUserProfileSuccess} = useQuery({
+    const {data : userDetails,isError :isUserDetailError,error : userDetailError, isLoading: isUserDetailLoading, isSuccess : isUserDetailSuccess} = useQuery({
       queryKey: ["profile", id],
       queryFn :  () => {
         if(state.userData._id === id) return state.userData
@@ -37,7 +39,7 @@ const UserProfile = () => {
       }
     })
      
-    const {data : serviceDetails,  isLoading, isSuccess : isServiceDetailsSuccess} = useQuery({
+    const {data : serviceDetails,  isLoading : isServiceDetailLoading, isSuccess : isServiceDetailSuccess, isError : isServiceDetailError, error : serviceDetailError} = useQuery({
       queryKey : ["serviceId", id],
       queryFn : () => {
         if(state.userData._id === id && state.userData.role === "serviceOwner"){
@@ -49,9 +51,8 @@ const UserProfile = () => {
     })
 
     useEffect(() => {
-      // userDetails && serviceDetails && setImage(prev => ({...prev, userAvatar : userDetails?.userAvatar, serviceCoverImage : serviceDetails?.serviceCoverImage}))
       setImage(prev => ({...prev, userAvatar : userDetails?.userAvatar, serviceCoverImage : serviceDetails?.serviceCoverImage}))
-    },[isUserProfileSuccess, isServiceDetailsSuccess, id])
+    },[isUserDetailSuccess, isServiceDetailSuccess, id])
 
   const handleImage = (e, field) => {
     
@@ -132,8 +133,8 @@ const UserProfile = () => {
     }
   })
 
-if(dataLoading) return <div>Loading...</div>
-if(isLoading) return <div>Loading..</div>
+if(isUserDetailLoading || isServiceDetailLoading) return <Loader />
+if(isUserDetailError || isServiceDetailError) return <Error />
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -271,7 +272,7 @@ if(isLoading) return <div>Loading..</div>
         </section>
 
         {/* Stay Packages Section */}
-        <section className="mb-16">
+        {/* <section className="mb-16">
           <h2 className="text-4xl font-bold text-gray-800 mb-6 text-center">Stay Packages</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -296,7 +297,7 @@ if(isLoading) return <div>Loading..</div>
               </button>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Reviews Section */}
 

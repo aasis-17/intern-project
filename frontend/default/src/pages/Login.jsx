@@ -1,10 +1,9 @@
-import React, { useContext, useState } from 'react'
+import { useContext, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import authService from '../services/authServices'
 import { useNavigate, Link } from 'react-router'
 import FormField from '../components/form/FormField'
 import { AuthContext } from '../store/authContext.jsx'
-import Button from '../components/Button.jsx'
 
 const Login = ({onClose}) => {
 
@@ -17,7 +16,6 @@ const navigate = useNavigate()
 const onSubmit = async (data) => {
     try {
         const userData = await authService.login(data.password, data.email)
-        console.log(userData)
         dispatch({type : "login", payload : userData})  
         onClose && onClose()
         navigate("/")     
@@ -51,8 +49,7 @@ const onSubmit = async (data) => {
                 required : true
             })}
              />
-            </div>
-            
+            </div>      
             <div>
             <FormField 
             label = "Password"
@@ -88,11 +85,6 @@ const onSubmit = async (data) => {
     </div>
     </div>
     </div>
-
-
-
-
-
   )
 }
 

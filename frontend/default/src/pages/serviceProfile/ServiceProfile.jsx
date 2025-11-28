@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 import serviceOwnerService from '../../services/serviceOwnerServices'
 import Loader from '../../components/loader/Loader'
 import Review from "../../components/Review.jsx"
+import Error from '../Error.jsx'
 
 const ServiceProfile = () => {
 
@@ -16,6 +17,7 @@ const ServiceProfile = () => {
     })
 
     if(isLoading) return <Loader />
+    if(isError) return <Error />
 
   return (
       <div className="min-h-screen bg-gray-50">

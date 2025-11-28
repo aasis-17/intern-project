@@ -1,4 +1,5 @@
 import axios from "axios"
+import { apiInstance } from "../axios/axios"
 class userServices{
     constructor(uri){
         this.uri=uri
@@ -6,10 +7,12 @@ class userServices{
 
     async getCurrentUser (){
         try {
-            const res = await axios.get(this.uri)
+            const res = await apiInstance.get(this.uri)
+            console.log(res)
             return res.data.data
-        } catch (error) {
-            throw error.response.data
+        }catch(error) {
+            console.log(error, 'errrror')
+            throw error
         }
     }
     async getUserById (userId){

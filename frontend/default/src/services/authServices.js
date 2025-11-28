@@ -5,7 +5,6 @@ class authServices {
         try {
             console.log("data", data.email, data.password)
             const res = await axios.post("/api/v1/auth/signup", data)
-            console.log(res)
             await this.login(data.password, data.email)
             return res
         } catch (error) {

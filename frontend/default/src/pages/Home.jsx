@@ -3,8 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import destinationService from '../services/destinationService.js';
 import { useNavigate } from 'react-router';
 import { useState} from 'react';
+import Error from './Error.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleChevronRight, faCircleChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import Loader from '../components/loader/Loader.jsx';
 
 const Home = () => {
   
@@ -16,10 +18,12 @@ const Home = () => {
   const [css, setCss] = useState("")
 
   const navigate = useNavigate()
-    const {data, isLoading, isError, isPending} = useQuery({
+    const {data, isLoading, isError} = useQuery({
       queryKey :["destination"],
       queryFn : () => destinationService.getDestination()
     })
+
+    console.log(isError, "IsError")
 
   const back = () =>{
     const totalDestination = data.destinations.length - 1
@@ -37,8 +41,8 @@ const Home = () => {
     setIndex(prev => ({...prev, even : prev.even - 2, odd : prev.odd - 2}))
     setTimeout(()=> setCss("animate-none"),300)
   }
-
-  if(isLoading) return <div>Loading!!</div>
+  // if(isError) return <Error />
+  if(isLoading) return <Loader size='xl' color='dark'/>
 
   return  (
     <div className='relative top-[-80px] '>

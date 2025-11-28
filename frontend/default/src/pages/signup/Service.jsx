@@ -35,10 +35,7 @@ const ServiceOwner = ({option }) => {
         region : serviceDetails?.serviceDestination || ""
     })
 
-    console.log(serviceDetails)
-
-
-    const {data, isSuccess}= useQuery({
+    const {data, isSuccess, isError, isLoading}= useQuery({
       queryKey : ["destinations"],
       queryFn :  () => {
         return  destinationService.getDestination()
@@ -119,7 +116,7 @@ const ServiceOwner = ({option }) => {
 
       }
     })
-  if(!serviceDetails) return <Loader />
+  if(!serviceDetails || isLoading) return <Loader />
    return(
    <div className=' flex-1'>
     {btnVisible ? (<PhotoUpload id={state.userData._id} option="service" setBtnVisible={setBtnVisible} />) 
@@ -228,6 +225,7 @@ const ServiceOwner = ({option }) => {
             <label className="block text-sm font-medium text-gray-600">
               Service Located :
             </label>
+
             <select
             defaultValue={mapState.region}
               onChange={handleChange}
@@ -236,7 +234,7 @@ const ServiceOwner = ({option }) => {
               disabled={!visible}
             >
               <option value="">Select destination</option>
-              { locations?.map((destination) => {
+              {  locations?.map((destination) => {
                 return (<option key={destination._id} value={destination.name}>{destination.name}</option>)
               })}
             </select>

@@ -2,16 +2,17 @@ import React, { useContext, useState } from 'react';
 import User from "../pages/signup/User"
 import Button from '../components/Button';
 import ServiceOwner from './signup/Service';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import ChangePassword from '../components/layouts/settings/ChangePassword';
 import serviceOwnerService from '../services/serviceOwnerServices';
 import { AuthContext } from '../store/authContext';
+import Loader from '../components/loader/Loader';
+import Error from './Error';
 
 const Settings = () => {
 
   const [view, setView] = useState(false)
   const {state} = useContext(AuthContext)
-  console.log(state)
 
   const {data : serviceDetails, isLoading, isError, error} = useQuery({
     queryKey : ["serviceDetails", state.userData._id],
@@ -20,12 +21,13 @@ const Settings = () => {
     }
   })
 
-  if(isLoading) <div>Loading..</div>
+  if(isLoading) return <Loader />
+  if(isError) return <Error />
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen overflow-y-hidden bg-gray-100">
       {/* Navigation Sidebar */}
-      <div className="w-64 bg-white shadow-lg p-6">
+      <div className="w-64 bg-white shadow-lg p-6 ">
         <h2 className="text-2xl font-bold text-gray-800 mb-8">Settings</h2>
         <nav>
           <ul className="space-y-4">
@@ -35,12 +37,7 @@ const Settings = () => {
                 Account
               </a>
             </li>
-            <li>
-              <a href="#privacy" className="flex items-center text-gray-700 hover:text-blue-600">
-                <span className="mr-2">🔒</span>
-                Change Password
-              </a>
-            </li>
+
             <li>
               <a href="#pages" className="flex items-center text-gray-700 hover:text-blue-600">
                 <span className="mr-2">🔔</span>
@@ -48,6 +45,12 @@ const Settings = () => {
               </a>
             </li>
             <li>
+              <a href="#privacy" className="flex items-center text-gray-700 hover:text-blue-600">
+                <span className="mr-2">🔒</span>
+                Change Password
+              </a>
+            </li>
+            {/* <li>
               <a href="#billing" className="flex items-center text-gray-700 hover:text-blue-600">
                 <span className="mr-2">💳</span>
                 Billing
@@ -58,7 +61,7 @@ const Settings = () => {
                 <span className="mr-2">🎨</span>
                 Appearance
               </a>
-            </li>
+            </li> */}
           </ul>
         </nav>
       </div>
@@ -74,12 +77,6 @@ const Settings = () => {
           <User option="edit"/>
 
 
-        </section>
-
-        {/*change password Section */}
-        <section id="privacy" className="mb-10">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Change Password</h2>
-            <ChangePassword />
         </section>
 
         {/* pages Section */}
@@ -136,8 +133,14 @@ const Settings = () => {
 
         </section>
 
+        {/*change password Section */}
+        <section id="privacy" className="mb-10">
+          <h2 className="text-3xl font-bold text-gray-800 mb-6">Change Password</h2>
+            <ChangePassword />
+        </section>
+
         {/* Billing Section */}
-        <section id="billing" className="mb-10">
+        {/* <section id="billing" className="mb-10">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Billing</h2>
           <div className="bg-white p-6 rounded-lg shadow-md">
             <p className="text-gray-700">Your current plan: <span className="font-bold">Pro</span></p>
@@ -148,10 +151,10 @@ const Settings = () => {
               Upgrade Plan
             </button>
           </div>
-        </section>
+        </section> */}
 
         {/* Appearance Section */}
-        <section id="appearance">
+        {/* <section id="appearance">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Appearance</h2>
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="mb-4">
@@ -169,7 +172,7 @@ const Settings = () => {
               Save Changes
             </button>
           </div>
-        </section>
+        </section> */}
       </div>
     </div>
   );

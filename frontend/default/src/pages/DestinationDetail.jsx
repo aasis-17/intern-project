@@ -5,19 +5,18 @@ import destinationService from '../services/destinationService';
 import serviceOwnerService from '../services/serviceOwnerServices';
 import Review from "../components/Review"
 import RouteGallery from "../components/layouts/destination/RouteGallery"
+import Error from './Error';
 const DestinationDetailPage = () => {
 
   const {id} = useParams()
 
-
-
-  const{data : destinationDetails, isLoading, isError, error} = useQuery({
+  const{data : destinationDetails, isLoading : isDestinationDetailLoading, isError : isDestinationDetailError, error} = useQuery({
     queryKey : ["destinationId", id],
     queryFn : () => destinationService.getDestinationById(id),
     staleTime : 30 * 1000
   })
 
-  const {data: services, isLoading : serviceLoading} = useQuery({
+  const {data: services, isLoading : isServiceDetailLoading, isError : isServiceDetailError} = useQuery({
     queryKey :["nearByServices", id],
     queryFn : () => serviceOwnerService.getAllServices({search : "", option : "approved", serviceDestination : destinationDetails.destinationName}),
     staleTime : 30 * 1000,
@@ -33,8 +32,8 @@ const DestinationDetailPage = () => {
     {name : "Reviews", link : `/destination/${id}/review`,href : "#review", state : { reviewState : "destinationId"}}, 
   ]
 
-  if(serviceLoading || isLoading) return <Loader />
-  if(isError) return <div>{error.message}</div>
+  if(isServiceDetailLoading || isDestinationDetailLoading) return <Loader />
+  if(isServiceDetailError || isDestinationDetailError) return <Error />
 
   return (
     <div className="min-h-screen bg-gray-100 animate-fade-down">
