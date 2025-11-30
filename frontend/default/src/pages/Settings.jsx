@@ -50,18 +50,7 @@ const Settings = () => {
                 Change Password
               </a>
             </li>
-            {/* <li>
-              <a href="#billing" className="flex items-center text-gray-700 hover:text-blue-600">
-                <span className="mr-2">💳</span>
-                Billing
-              </a>
-            </li>
-            <li>
-              <a href="#appearance" className="flex items-center text-gray-700 hover:text-blue-600">
-                <span className="mr-2">🎨</span>
-                Appearance
-              </a>
-            </li> */}
+
           </ul>
         </nav>
       </div>

@@ -5,7 +5,7 @@ import Button from '../components/Button'
 const Error = () => {
   const navigate = useNavigate()
   const goBack = () =>{
-    navigate(-1)
+  window.location.reload()
   }
   return (
     <>

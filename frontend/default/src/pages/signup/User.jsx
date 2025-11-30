@@ -22,24 +22,28 @@ const User = ({option}) => {
   const authContext = useContext(AuthContext)
 
   const userDetails = authContext.state.userData
+  console.log(userDetails, "userDetails")
 
   const mutation = useMutation({
     mutationFn : async(data) => {
       if(option === "edit"){
-        await userService.updateUserInfo(data)
+        const updatedData = await userService.updateUserInfo(data)
+        return updatedData
       }else{
         const userData = await authService.signup(data)
         return userData
       }
     },
-    onSuccess : (userData) => {
+    onSuccess : (data) => {
       if(option !== "edit")  {
         toast.success(Notify,{data : {msg : "User signup successfully!!"}, autoClose : 1000})
-        dispatch({type : "login", payload : userData})  
+        dispatch({type : "login", payload : data})  
       }
      
       else{
+        console.log(data, "userData")
         toast.success(Notify,{data : {msg : "User info updated successfully!!"}, autoClose : 1000})
+        dispatch({type : "login", payload : data}) 
         setVisible(false)
       } 
     },

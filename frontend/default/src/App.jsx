@@ -20,7 +20,6 @@ import UserProfile from './pages/UserProfile.jsx';
 import ServiceOwner from './pages/signup/Service.jsx';
 import Settings from './pages/Settings.jsx';
 import Error from './pages/Error.jsx';
-import authService from './services/authServices.js';
 import Services from './pages/services/Services.jsx';
 import { useQuery } from '@tanstack/react-query';
 import Loader from './components/loader/Loader.jsx';
@@ -51,7 +50,7 @@ function App() {
       
     }
   })
-  console.log(currentUserState.isError, "error")
+
   if(currentUserState.isError) return <Error /> 
  
   if(currentUser.isLoading) return <Loader size='xl' color="dark" />
@@ -84,28 +83,6 @@ function App() {
          <Route  path='login' element={<Login />} />
           </Route>
 
-          {/* admin panel */}
-            {/* <Route path='/admin' element={<PageProtector><Layout children={<AdminPage />} className={"flex"} /></PageProtector>}>
-            <Route index element={<Dashboard />} />
-
-            <Route path='destination' element={<AdminDestinations />}/>
-
-            <Route path='upload' element={<DestinationUpload />}/>
-            
-            <Route path='upload/:destinationId' element={<Editlayout />}>
-            <Route index element={<DestinationUpload />} />
-            <Route path='route' element={<RouteUpload />} />
-            <Route path="photoUpload" element={<PhotoUpload />} />
-            </Route>
-
-            <Route path='services' element={<AdminServices />} />
-            <Route path="uploadService" element={<Service option="admin" />} />
-            <Route path="uploadService/:serviceId" element={<ServiceDetails  />} />
-
-            <Route path='request' element={<Requests />} />
-            <Route path='request/:id' element={<RequestDetail />} />
-
-            </Route> */}
     
       </Routes>
     </Container>
