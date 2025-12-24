@@ -1,10 +1,8 @@
-import React from 'react'
 import Button from "../../Button"
-import serviceOwnerService from '../../../services/serviceOwnerServices'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router'
 import NearByServiceMap from '../../map/NearByServiceMap'
-import Map from '../../map/Map'
+import Map from '../../map/Map.jsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHotel } from '@fortawesome/free-solid-svg-icons'
 
@@ -15,8 +13,6 @@ const RouteIndex = () => {
     const destination = queryClient.getQueryData(["destinationId", id])
 
     const services = queryClient.getQueryData(["nearByServices", id])
-
-    console.log(destination)
 
     const navigate = useNavigate()
     
@@ -37,13 +33,9 @@ const RouteIndex = () => {
         )}
 
       </div>
-
-      <div className=" h-72 w-full">
-
-        {/* add map */}
-     {/* <RouteMap /> */}
-     <Map children={<NearByServiceMap mapDetails={destination} />} />
-
+  {/* add map */}
+      <div className=" h-72 w-full ">
+        <Map children={<NearByServiceMap mapDetails={destination} />} />
       </div>
     </div>
 

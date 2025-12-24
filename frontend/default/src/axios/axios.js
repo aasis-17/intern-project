@@ -19,18 +19,18 @@ export const apiInstance = axios.create({
 // });
     
 apiInstance.interceptors.response.use(response => response,  async (error) => {
-    console.log(error)
+    console.log(error, "apiinstance error")
             if (error.status === 500 && error.response?.data.message === "jwt expired") {
                 try {
                     await axios.post("/api/v1/auth/refresh")
                     return apiInstance(error.config); // Retry original request 
                 } catch (error) {
-                    console.log("refresh error", error)
-                    throw error
+                    console.log("refresh error", error.response)
+                    throw error.response
                 }
             }
 
-            throw error;
+            throw error.response;
 });
 
  

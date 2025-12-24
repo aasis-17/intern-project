@@ -4,6 +4,7 @@ import authService from '../services/authServices'
 import { useNavigate, Link } from 'react-router'
 import FormField from '../components/form/FormField'
 import { AuthContext } from '../store/authContext.jsx'
+import { useMutation } from '@tanstack/react-query'
 
 const Login = ({onClose}) => {
 
@@ -13,16 +14,28 @@ const [handleError, setHandleError] = useState()
 const {register, handleSubmit} = useForm()
 const navigate = useNavigate()
 
-const onSubmit = async (data) => {
-    try {
-        const userData = await authService.login(data.password, data.email)
-        dispatch({type : "login", payload : userData})  
-        onClose && onClose()
-        navigate("/")     
-    } catch (error) {
-        setHandleError(error.message)
-    }
-}
+// const onSubmit = async (data) => {
+//     try {
+//         const userData = await authService.login(data.password, data.email)
+//         dispatch({type : "login", payload : userData})  
+//         onClose && onClose()
+//         navigate("/")     
+//     } catch (error) {
+//         setHandleError(error.message)
+//     }
+// }
+
+const {mutate} = useMutation({
+  mutationFn : (data) => authService.login(data.password, data.email),
+  onSuccess : (data) => {
+    dispatch({type : "login", payload : data})
+    onClose && onClose()
+    navigate("/")
+  },
+  onError : (error) => setHandleError(error.message)
+
+})
+
   return (
     <div>
     <div className=" flex items-center justify-center">
@@ -36,7 +49,7 @@ const onSubmit = async (data) => {
             </p>
           </div>
 
-        <form className="mt-6 space-y-4" onSubmit={ handleSubmit(onSubmit)}>
+        <form className="mt-6 space-y-4" onSubmit={ handleSubmit(mutate)}>
             <div>
             <FormField 
             label = "Email"

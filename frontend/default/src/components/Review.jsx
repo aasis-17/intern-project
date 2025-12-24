@@ -1,27 +1,37 @@
-import { useContext, useState } from "react";
-// import { useLocation, useOutletContext } from "react-router";
-import { useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
-import reviewService from "../services/reviewService.js"
+import { useCallback, useContext, useState } from "react";
 import { AuthContext } from "../store/authContext.jsx";
-import {toast} from "react-toastify"
-import Notify from "./toast/Notify.jsx";
 import Button from "./Button.jsx";
+import { useReview } from "../utiles/useReview.js";
+import ReviewList from "./ReviewList.jsx";
 
 const ReviewComponent = ({reviewState, reviewId}) => {
 
   const [hoverRating, setHoverRating] = useState(0);
-  const [reviews, setReviews] = useState({
+  const [review, setReview] = useState({
     rating : 0,
     comment : ""
   });
-  const queryClient = useQueryClient()
 
   const {state, dispatch} = useContext(AuthContext)
 
-  const reviewDetails = queryClient.getQueryData([reviewState, reviewId])
+  const {reviews,
+      createReviewMutation,
+      deleteReviewMutation} = useReview({reviewState, reviewId})
+
+  const handleReviewSubmit = () => {
+      if(!state.isAuthenticated) {
+        dispatch({type : "setModal", payload : true})
+        return 
+      } 
+      createReviewMutation.mutate(review)
+  }
+
+  const handleReviewDelete = useCallback((id) =>{
+    deleteReviewMutation.mutate(id)
+  }, [deleteReviewMutation])
 
   const handleStarClick = (star) => {
-    setReviews(prev => ({...prev, rating : star }))
+    setReview(prev => ({...prev, rating : star }))
   };
 
   const handleStarHover = (star) => {
@@ -33,92 +43,19 @@ const ReviewComponent = ({reviewState, reviewId}) => {
   };
 
   const handleCommentChange = (e) => {
-    setReviews(prev => ({...prev, comment : e.target.value}))
+    setReview(prev => ({...prev, comment : e.target.value}))
   };
-
-  const deleteMutation = useMutation({
-    mutationFn : async(reviewId) => {
-      const data = await reviewService.deleteReview(reviewId)
-      return data
-    },
-    onSuccess : (data) => {
-      if(reviewState === "serviceId"){
-        queryClient.setQueryData([reviewState, reviewId],(prev) => ({...prev, reviews : prev.reviews.filter(review => review._id !== data._id)}) )
-        
-        toast.success(Notify, {data : {msg :`Service review deleted successfully!!`}, autoClose : 1000})
-      }else{
-        queryClient.setQueryData( [reviewState, reviewId], 
-          (prev) => ({...prev, reviews : prev.reviews.filter(review => review._id !== data._id)}) )
-        toast.success(Notify, {data : {msg :`Destination Review deleted successfully!!`}, autoClose : 1000})
-      }
-    },
-    onError : (error) => {
-      toast.error(Notify,{data : {msg : error ||`Error while deleting review!!`}, autoClose : 1000})
-    }
-  })
-
-  const mutation = useMutation({
-    mutationFn : async()=>{ 
-      if(!state.isAuthenticated) {
-        dispatch({type : "setModal", payload : true})
-        return null
-      } 
-      else if (reviews.rating === 0 || !reviews.comment.trim() === "") {
-        throw "Please provide a rating and a comment before submitting.";
-      }
-      const data = await reviewService.createReview(reviews, reviewState, reviewDetails._id)
-      return data
-    },
-    onSuccess : (data) => {
-      if(!data) return 
-      if(reviewState === "serviceId"){
-        queryClient.setQueryData([reviewState, reviewId], data) 
-        toast.success(Notify,{data : {msg : `Review submitted to ${reviewState} successfully!!`}, autoClose : 1000})
-        setReviews({rating : 0, comment : ""})
-      }else{
-        queryClient.setQueryData( [reviewState, reviewId], data ) 
-        toast.success(Notify, {data : {msg : `Review submitted to ${reviewState} successfully!!`}, autoClose : 1000})
-        setReviews({rating : 0, comment : ""})
-      }
-
-    },
-    onError : (error) => {
-      toast.error(Notify,{data : {msg :error || "Error while submitting review!!"}, autoClose : 1000})
-    }
-  })
 
   return (
     <>
       {/* Display Submitted Reviews */}
-      <div className=" p-8 bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl border border-purple-100">
-        <h3 className="text-xl font-semibold text-purple-800 mb-4">
-          Submitted Reviews
-        </h3>
-        {reviewDetails?.reviews?.length === 0 ? (
-          <p className="text-gray-500 text-center">No reviews yet.</p>
-        ) : (
-          <div className="overflow-y-scroll h-96">{
-          reviewDetails.reviews.map((review) => (
 
-            <div key={review._id} className="bg-white px-6 mb-5 py-2 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-                 <div className="flex justify-end">
-                   {[...Array(review.rating)].map((_, i) => (
-                    <span key={i} className="text-yellow-400 text-xl">
-                      ★
-                    </span>
-                  ))}
-                </div>              
-            <p className="text-gray-600 mb-2">"{review.reviewMessage}"</p>
-            <div className="flex justify-between">
-            <p className="text-gray-800 font-semibold">- {review.creator.fullname}</p>
-            {state.userData && review.creator._id === state.userData._id && <Button variant="noCss" onClick={() =>deleteMutation.mutateAsync(review._id)} className= " flex items-end  text-red-500 text-xs cursor-pointer" loading={deleteMutation.isPending} children="Delete"/>}
-            </div>    
-          </div>
-            ))
-          }
-          </div>)
-        } 
-       </div>
+       <ReviewList
+        reviews = {reviews}
+        user={state.userData}
+        onDelete={handleReviewDelete}
+        isDeleting={deleteReviewMutation.isPending}
+        />
 
     <div className=" p-8 bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl shadow-2xl border border-purple-100">
       <h2 className="text-2xl font-bold text-purple-800 mb-6 text-center">
@@ -137,7 +74,7 @@ const ReviewComponent = ({reviewState, reviewId}) => {
             onMouseEnter={() => handleStarHover(star)}
             onMouseLeave={handleStarLeave}
             className={`text-4xl transition-all duration-300 ${
-              star <= (hoverRating || reviews.rating)
+              star <= (hoverRating || review.rating)
                 ? "text-yellow-400 transform scale-110"
                 : "text-gray-300"
             }`}
@@ -149,7 +86,7 @@ const ReviewComponent = ({reviewState, reviewId}) => {
 
       {/* Comment Box */}
       <textarea
-        value={reviews.comment}
+        value={review.comment}
         placeholder="Write your review here..."
         className="w-full p-4 border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white placeholder-gray-400 text-gray-700"
         rows="5"
@@ -159,13 +96,13 @@ const ReviewComponent = ({reviewState, reviewId}) => {
 
       {/* Submit Button */}
       <Button
-        onClick={mutation.mutate}
-        loading={mutation.isPending}
+        onClick={handleReviewSubmit}
+        loading={createReviewMutation.isPending}
+        disabled={review.rating === 0 || !review.comment.trim()}
         className="mt-6 w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg"
         children="Submit Review"
       />
-       
-      
+        
       </div>
       </>
     

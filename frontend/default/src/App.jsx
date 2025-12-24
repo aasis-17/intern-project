@@ -1,36 +1,40 @@
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import Home from './pages/Home.jsx';
-import Layout from './components/Layout.jsx';
-import Container from './components/Container.jsx';
-import SignupPage from './pages/Signup.jsx';
-import Header from './components/layouts/Header.jsx'
-import User from './pages/signup/User.jsx';
-import Login from './pages/Login.jsx';
-import Destination from './pages/Destination.jsx';
-import ServiceProfile from './pages/serviceProfile/serviceProfile.jsx';
-import DestinationDetailPage from './pages/DestinationDetail.jsx';
-import { useContext } from 'react';
+import { lazy, memo, Suspense, useState, useContext } from 'react';
 import { AuthContext } from './store/authContext.jsx';
-import RoutePlan from './components/layouts/destination/RoutePlan.jsx';
-import RouteIndex from './components/layouts/destination/RouteIndex.jsx';
-import userService from './services/userService.js';
-import PageProtector from './components/AuthLayout.jsx';
-import UserProfile from './pages/UserProfile.jsx';
-import ServiceOwner from './pages/signup/Service.jsx';
-import Settings from './pages/Settings.jsx';
-import Error from './pages/Error.jsx';
-import Services from './pages/services/Services.jsx';
 import { useQuery } from '@tanstack/react-query';
-import Loader from './components/loader/Loader.jsx';
+import Container from  './components/Container.jsx';
+import userService from './services/userService.js';
+import RouteIndex from './components/layouts/destination/RouteIndex.jsx';
+import RoutePlan from './components/layouts/destination/RoutePlan.jsx';
+import Skeleton from './components/skeleton/skeleton.jsx';
+
+const Error = lazy(() => import ('./pages/Error.jsx'));
+
+const Layout = lazy(() => import ('./components/Layout.jsx'));
+const PageProtector = lazy(() => import ('./components/AuthLayout.jsx'));
+
+const Home = lazy(() => import ('./pages/home/Home.jsx'));
+const SignupPage = lazy(() => import ('./pages/Signup.jsx'));
+const Header = lazy(() => import ('./components/layouts/Header.jsx')) 
+const User = lazy(() => import ('./pages/signup/User.jsx'));
+const Login = lazy(() => import ('./pages/Login.jsx'));
+const Destination = lazy(() => import ('./pages/Destination.jsx'));
+const ServiceProfile = lazy(() => import ('./pages/serviceProfile/serviceProfile.jsx'));
+const DestinationDetailPage = lazy(() => import ('./pages/DestinationDetail.jsx'));
+const UserProfile = lazy(() => import ('./pages/UserProfile.jsx'));
+const ServiceOwner = lazy(() => import ('./pages/signup/Service.jsx'));
+const Settings = lazy(() => import ('./pages/Settings.jsx'));
+const Services = lazy(() => import ('./pages/services/Services.jsx'));
 
 function App() {
 
   const {dispatch} = useContext(AuthContext)
   const navigate = useNavigate()
-  const [currentUserState, setCurrentUserState] = useState({ isError : false})
+  const [currentUserState, setCurrentUserState] = useState(false)
 
-  const currentUser = useQuery({
+  const MemoHeader = memo(Header)
+
+  const {isLoading} = useQuery({
     queryKey : ["current user"],
     queryFn : 
     async() => {
@@ -40,26 +44,31 @@ function App() {
         dispatch({type : "login", payload : data})
         return data
       } catch (error) {
-        console.log(error.response.status)
-        error.response.status === 401 ?
-         dispatch({type : "logout"})
-         : setCurrentUserState({...currentUserState, isError : true})
+        console.log(error)
+        if (error.data.message === "jwt expired" || error.status === 401) {
+           dispatch({type : "logout"})
+        }else setCurrentUserState(true)
+         
         navigate("/")
+        console.log("eeee")
+                
         return error
-      }
-      
+        }
     }
   })
 
-  if(currentUserState.isError) return <Error /> 
+
+
+  if(currentUserState) return <Error /> 
  
-  if(currentUser.isLoading) return <Loader size='xl' color="dark" />
+  if(isLoading) return <Skeleton />
   return (
 
     <Container>
+     <Suspense  fallback={<Skeleton/>}>
       <Routes>
          {/* Pages with Header and footer*/}
-        <Route path="/" element={<Layout children={<Header />}/>}>
+        <Route path="/" element={<Layout children={<MemoHeader />}/>}>
           <Route index element={<Home />} />
           <Route path="/destination" element={<Destination />} />
           <Route path="/:id" element={<PageProtector children={<UserProfile />}/>} />
@@ -82,10 +91,10 @@ function App() {
          <Route path='service' element={<ServiceOwner />} />
          <Route  path='login' element={<Login />} />
           </Route>
-
-    
       </Routes>
+        </Suspense>
     </Container>
+  
 
 
   )

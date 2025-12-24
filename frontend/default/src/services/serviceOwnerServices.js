@@ -36,7 +36,7 @@ class serviceOwnerServices {
     }
 
     async getAllServices ({search="",option="", serviceDestination=""}){
-        console.log(search)
+    
         try {
             const res = await axios.get(`${this.uri}?search=${search}&isApproved=${option}&serviceDestination=${serviceDestination}`)
             console.log(res.data)

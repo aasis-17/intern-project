@@ -1,8 +1,7 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { useMap, Marker, Popup } from 'react-leaflet'
 import { icon, latLng } from 'leaflet'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import serviceOwnerService from '../../services/serviceOwnerServices'
+import { useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router'
 
 const NearByServiceMap = ({mapDetails}) => {
@@ -10,7 +9,6 @@ const NearByServiceMap = ({mapDetails}) => {
     const queryClient = useQueryClient()
     const services = queryClient.getQueryData(["nearByServices", id])
 
-    console.log(services)
         const map = useMap()
     
         map.flyTo(latLng(mapDetails.serviceLocationMapCoordinates?.latitude || mapDetails.destinationMapCoordinates?.latitude, mapDetails.serviceLocationMapCoordinates?.longitude || mapDetails.destinationMapCoordinates?.longitude), map.getZoom(17))
@@ -31,4 +29,4 @@ const NearByServiceMap = ({mapDetails}) => {
 
 }
 
-export default NearByServiceMap
+export default memo(NearByServiceMap) 

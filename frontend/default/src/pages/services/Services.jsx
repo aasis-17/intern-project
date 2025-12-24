@@ -3,11 +3,11 @@ import serviceOwnerService from '../../services/serviceOwnerServices'
 import destinationService from '../../services/destinationService'
 import Loader from '../../components/loader/Loader'
 import { useNavigate } from 'react-router'
-import { useState } from 'react'
-import { useDebounce } from '../../utiles/debounce'
+import { useCallback, useState } from 'react'
+import  {useDebounceState}  from '../../utiles/debounce'
 import FormField from '../../components/form/FormField'
-import Button from '../../components/Button'
 import Error from '../Error'
+import ServiceCard from './component/ServiceCard'
 
 const Services = () => {
 
@@ -18,26 +18,30 @@ const Services = () => {
         option : "approved",
         serviceDestination : ""
     })
-      const {data : services, isLoading, isError, error} = useQuery({
-        queryKey :["services", filter.search, filter.option, filter.serviceDestination],
-        queryFn : () => serviceOwnerService.getAllServices(filter),
-        // staleTime : 2 * 60000
-      })
 
-      console.log(isError)
+    const debouncedFilter = useDebounceState(filter, 1000)
+    console.log(debouncedFilter)
+
+      const {data : services = [], isLoading, isError, error} = useQuery({
+        // queryKey :["services", filter.search, filter.option, filter.serviceDestination],
+        queryKey :["services", debouncedFilter],
+        queryFn : () => serviceOwnerService.getAllServices(filter),
+        placeholderData : (prev) => prev
+      })
 
     const {data : destinations, isLoading : isDestinationLoading}= useQuery({
       queryKey : ["destinationName"],
-      queryFn :  () => destinationService.getAllDestinationName()
+      queryFn :  () => destinationService.getAllDestinationName(),
+      staleTime: 1000 * 60 * 60, // 1 hour
     })
     console.log(destinations,"destination name")
 
-    const handleSearch = (e) =>{
+    const handleSearch = useCallback((e) =>{
         const {name, value} = e.target
         setFilter(prev => ({...prev, [name] : value}))
-      }
+      }, [])
 
-    const debounceQuery = useDebounce(handleSearch, 400)
+    
 
     if(isDestinationLoading) return <Loader />
     if(isError) return <Error />
@@ -56,14 +60,14 @@ const Services = () => {
 <FormField
   name="search"
   placeholder="Search service..."
-  onChange={(e) => debounceQuery(e)}
+  onChange={handleSearch}
   className="p-2 border border-gray-300 rounded-lg flex-grow"
 />
 
 {/* Region Select Dropdown */}
 <select
   name="serviceDestination"
-  onChange={(e) => debounceQuery(e)}
+  onChange={handleSearch}
   className="p-2 border border-gray-300 rounded-lg"
 >
     <option key="all" value="">
@@ -81,47 +85,23 @@ const Services = () => {
 
       {/* services Cards Grid */}
       <div >
-        {isLoading ? <Loader size='lg' /> :
-        (
-            
+        {isLoading ? <Loader size='lg' /> 
+        
+        :
+
+        (     
         <>
-        {services[0] ? services?.map((service) => (
-          <div key={service._id} className='shadow-md flex justify-between items-center h-32 mb-3'>
-          <div  className={`h-full w-[35%] bg-red-50   rounded overflow-hidden shadow-lg relative`}>
-          {/* Image Container */}
-          <div className="h-32 w-full relative rounded-lg overflow-hidden">
-            {/* Image */}
-            <img
-              className={`h-32 w-full object-cover transition-transform duration-300 transform hover:scale-110`}
-              src={service.serviceCoverImage}
-              alt={service.serviceName}
-            />
-        {/* Dark Gradient Overlay at the Bottom */}
-        <div className="absolute h-8 top-24 inset-0 bg-gradient-to-t from-black/80 to-transparent -z-0"></div>
-          </div>
-    
-          {/* Destination Name */}
-          <div className="absolute bottom-2 left-2 text-white font-bold text-xl">
-            {service.serviceName}
-          </div>
-          <div>
+        {services.length === 0 ? 
 
-          </div>
-
-          </div>
-          {/* <span className='text-sm '>Status : {service.isApproved === "approved" ? <MdCheckCircle className="text-green-500 me-1 dark:text-green-300 inline" /> : <MdOutlineError className="text-amber-500 me-1 dark:text-amber-300 inline" />}<span >{service.isApproved.toUpperCase()}</span> </span> */}
-          <div className='mr-5 '>
-            <Button 
-              onClick={() =>{
-                navigate(`/profile/${service._id}`, {state :filter} )
-                }}
-              children="Review" 
-              variant='outline'
-              className='mr-5'
-              />
-          </div>
-        </div>
-        )) : (<div className='text-center mt-3'>No services avaliable!!</div>)}
+        (<div className='text-center mt-3'>No services avaliable!!</div>)
+        :
+          services?.map((service) => (
+         <ServiceCard
+          key={service._id}
+          service={service}
+          onReview={() => navigate(`/profile/${service._id}`, {state :filter} )} />
+        ))
+}
         </>)
         
 }

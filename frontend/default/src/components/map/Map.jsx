@@ -1,5 +1,5 @@
 import { latLng } from 'leaflet'
-import React from 'react'
+import { memo } from 'react'
 import { MapContainer, TileLayer } from 'react-leaflet'
 
 const Map = ({children}) => {
@@ -8,10 +8,12 @@ const Map = ({children}) => {
     className='w-full h-full rounded-lg'
     center={latLng(27.71, 85.32)}
     zoom={15}
-    scrollWheelZoom={false}>
+    scrollWheelZoom={false}
+    >
     <TileLayer
       // url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+          // attribution='&copy; 
+          // <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
     url="https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png"
     />
     {children}
@@ -19,4 +21,4 @@ const Map = ({children}) => {
   )
 }
 
-export default Map
+export default memo(Map)

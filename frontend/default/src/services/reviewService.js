@@ -6,10 +6,10 @@ class reviewServices {
         this.uri = uri
     }
 
-    async createReview (formData, reviewOption, id){
-        console.log(formData, reviewOption)
+    async createReview ({reviewForm, reviewState, reviewId}){
+        console.log(reviewForm, reviewState, reviewId)
         try {
-            const res = await axios.post(`${this.uri}?${reviewOption}=${id}`, formData)
+            const res = await axios.post(`${this.uri}?${reviewState}=${reviewId}`, reviewForm)
             console.log(res)
             return res.data.data
         } catch (error) {
@@ -18,9 +18,10 @@ class reviewServices {
         }
     }
 
-    async getReviews(reviewOption, id, limit=10, page=1){
+    async getReviews({reviewState, reviewId, limit=10, page=1}){
+        console.log(reviewId, reviewState)
         try {
-            const res = await axios.get(`${this.uri}?${reviewOption}=${id}&limit=${limit}&page=${page}`)
+            const res = await axios.get(`${this.uri}?${reviewState}=${reviewId}&limit=${limit}&page=${page}`)
             console.log(res)
             return res.data.data
         } catch (error) {

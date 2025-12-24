@@ -2,7 +2,8 @@ import {useState } from 'react'
 import DestinationCard from '../components/DestinationCard';
 import { useQuery} from "@tanstack/react-query"
 import destinationService from '../services/destinationService';
-import { useDebounce } from '../utiles/debounce';
+import {useDebounceState } from '../utiles/debounce';
+import Loader from '../components/loader/Loader';
 
 // Main Destination Page Component
 const Destination = () => {
@@ -11,6 +12,8 @@ const Destination = () => {
     search : "",
     region : ""
   })
+
+  const debounceFilter = useDebounceState(filter, 400)
 
     // Region Options
     const regionOptions = [
@@ -24,9 +27,9 @@ const Destination = () => {
     ];
 
   const {data, isError, error, isLoading} = useQuery({
-    queryKey :["destinations", filter.search, filter.region],
-    queryFn : () => destinationService.getDestination(filter.search, filter.region),
-    staleTime : 2 * 60000
+    queryKey :["destinations", debounceFilter],
+    queryFn : () => destinationService.getDestination(filter),
+    placeholderData : (prev) => prev
   })
 
   const destinations = data?.destinations
@@ -37,9 +40,8 @@ const Destination = () => {
   }
 
   if(isError) return <div className='text-red-400 text-center'>{error.message}</div>
+  if(isLoading) return <><Loader color='dark' /></>
   
-  const debounceQuery = useDebounce(handleSearch, 400)
-
    return (
     <div className="p-8">
       {/* Search and Filter Section */}
@@ -49,14 +51,14 @@ const Destination = () => {
           type="text"
           name="search"
           placeholder="Search destinations..."
-          onChange={(e) => debounceQuery(e)}
+          onChange={handleSearch}
           className="p-2 border border-gray-300 rounded-lg flex-grow"
         />
 
         {/* Region Select Dropdown */}
         <select
           name="region"
-          onChange={(e) => debounceQuery(e)}
+          onChange={(e) => handleSearch}
           className="p-2 border border-gray-300 rounded-lg"
         >
             <option key="all" value="">
@@ -72,14 +74,24 @@ const Destination = () => {
           <div className='text-4xl font-garamond font-medium mb-7'>Destinations </div>
       {/* Destination Cards Grid */}
       <div className='animate-fade-down animate-delay-200 animate-ease-out'>
-        {isLoading ? <div>Loading...</div> : 
+
+        {isLoading ? <div>Loading...</div> 
+        
+        : 
+
         destinations[0] ? destinations.map((destination) => (
+
           <DestinationCard
             key={destination._id}
             {...destination}
             className="h-64"
+            variant = "list"
           />
-        )) : (<div className='text-center'>No destination avaliable!!</div>)}
+        )) 
+        
+        :
+        
+        (<div className='text-center'>No destination avaliable!!</div>)}
 
       </div>
     </div>

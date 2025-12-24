@@ -24,34 +24,36 @@ export const createReview = asyncHandler( async(req, res) => {
 
     if(!createdReview) throw new ApiError(500, "Server error while creating review!!")
 
-    let addReview;
-    if(Object.keys(reviewObject)[0] === "destinationId"){
-         addReview = await Destination.findByIdAndUpdate(reviewObject.destinationId,{
-            $push : {
-                reviews : createdReview._id
-            }
-        },{new : true}).populate({path :"reviews", populate :[ "comments","creator"]})
-    }
-    if(Object.keys(reviewObject)[0] === "guideId"){
-         addReview = await Guide.findByIdAndUpdate(reviewObject.destinationId,{
-            $push : {
-                reviews : createdReview._id
-            }
-        },{new : true}).populate({path :"reviews", populate :[ "comments","creator"]})
-    }
-    if(Object.keys(reviewObject)[0] === "serviceId"){
-         addReview = await ServiceOwner.findByIdAndUpdate(reviewObject.serviceId,{
-            $push : {
-                reviews : createdReview._id
-            }
-            
-        },{new : true}).populate({path :"reviews", populate :[ "comments","creator"]})
+    const review = await Review.findById(createdReview._id).populate("creator")
 
-    }
-    console.log(addReview)
-     if(!addReview) throw new ApiError(500, "Server error while adding review!!")
+    // let addReview;
+    // if(Object.keys(reviewObject)[0] === "destinationId"){
+    //      addReview = await Destination.findByIdAndUpdate(reviewObject.destinationId,{
+    //         $push : {
+    //             reviews : createdReview._id
+    //         }
+    //     },{new : true}).populate({path :"reviews", populate :[ "comments","creator"]})
+    // }
+    // if(Object.keys(reviewObject)[0] === "guideId"){
+    //      addReview = await Guide.findByIdAndUpdate(reviewObject.destinationId,{
+    //         $push : {
+    //             reviews : createdReview._id
+    //         }
+    //     },{new : true}).populate({path :"reviews", populate :[ "comments","creator"]})
+    // }
+    // if(Object.keys(reviewObject)[0] === "serviceId"){
+    //      addReview = await ServiceOwner.findByIdAndUpdate(reviewObject.serviceId,{
+    //         $push : {
+    //             reviews : createdReview._id
+    //         }
+            
+    //     },{new : true}).populate({path :"reviews", populate :[ "comments","creator"]})
+
+    // }
+    // console.log(addReview)
+    //  if(!addReview) throw new ApiError(500, "Server error while adding review!!")
     
-    return res.status(201).json( new ApiResponse(200, addReview, "Review created successfully!!"))
+    return res.status(201).json( new ApiResponse(200, review, "Review created successfully!!"))
 })
 
 export const updateReview = asyncHandler(async(req, res) => {
@@ -150,6 +152,8 @@ export const getReviews = asyncHandler( async(req, res) =>{
     }
 
 ])
+
+    console.log(reviews)
 
     const totalReview = await Review.countDocuments(filter)
 
