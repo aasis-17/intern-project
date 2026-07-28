@@ -1,4 +1,4 @@
-import { createContext, useReducer } from 'react';
+import { createContext, useContext, useReducer } from 'react';
 
 //reducers
 const authReducer = (state, action) => {
@@ -8,22 +8,23 @@ const authReducer = (state, action) => {
     case "logout" :
       return {...state, isAuthenticated : false, userData : null}
     case "setModal" : 
-      return {...state, isVisible : action.payload}
+      return {...state, isModelVisible : action.payload}
     default:
       throw new Error(`Unhandled action type: ${action.type}`);
   }
 };
 
 //context
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 const initialState = { 
     isAuthenticated : false,
     userData : null,
-    isVisible : false
+    isModelVisible : false,
+    token : null
  };
 
-const AuthProvider = ({ children }) => {
+ export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   return (
@@ -36,4 +37,5 @@ const AuthProvider = ({ children }) => {
 
 
 
-export { AuthContext, AuthProvider };
+// export { AuthContext, AuthProvider };
+export const useAuth = () => useContext(AuthContext)

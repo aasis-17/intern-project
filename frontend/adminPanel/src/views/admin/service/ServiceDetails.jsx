@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { useLocation, useParams } from 'react-router'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router'
 import Button from '../../../components/button/Button'
 import { useApproveServiceMutation, useGetServiceByIdQuery, useRejectServiceMutation } from '../../../services/apiSlice'
 import ServiceOwner from "./component/Service"
@@ -12,6 +12,8 @@ const ServiceDetails = () => {
     const {serviceId} = useParams()
    
     const {state} = useLocation()
+
+    const navigate= useNavigate()
     
     const {data : serviceDetails, isLoading, isError} = useGetServiceByIdQuery(serviceId)
 
@@ -23,14 +25,14 @@ const ServiceDetails = () => {
         if(submit === "approved"){
           await approveMutation({userId : serviceDetails.userId, serviceId})
         }else{
-          await rejectMutation({serviceId : serviceDetails._id})
+          await rejectMutation(serviceDetails._id)
         }
         return submit
       }
 
     useEffect(()=>{
       rejectError && toast.error(Notify, {data : { msg : "service reject error!!"}, autoClose : 1000})
-      rejectSuccess && toast.success(Notify ,{data : { msg : "service reject success!!"}, autoClose : 1000})
+      rejectSuccess && toast.success(Notify ,{data : { msg : "service reject success!!"}, autoClose : 1000}) && navigate("/admin/service")
       approveError && toast.error(Notify, {data : {msg : "service approve error!!"}, autoClose : 1000})
       approveSuccess && toast.success(Notify, {data : {msg : "service approve success!!"}, autoClose : 1000})
     },[rejectError, rejectSuccess, approveError, approveSuccess])
@@ -40,7 +42,7 @@ const ServiceDetails = () => {
   return (
     <div className='flex-1 p-7'>
         <ServiceOwner details={serviceDetails} option="edit" filterState = {state} />
-        {serviceDetails?.isApproved === "pending" && 
+        {serviceDetails?.status === "pending" && 
            <div className="flex mt-3 gap-5">
                  <Button
                  children="Approve"

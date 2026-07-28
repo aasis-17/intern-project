@@ -1,10 +1,10 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import { createPortal } from 'react-dom';
 
 const Modal = ({ visible, onClose, children }) => {
 if (!visible) return null; // Render nothing if not visible
 
-  return (
+  return createPortal(
     <div className="z-50 fixed top-0 left-0 w-full h-full flex items-center justify-center bg-transparent backdrop-blur-sm" onClick={onClose}>
       <div className="relative bg-white w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <button className="absolute top-6 right-6 font-semibold" onClick={onClose}>
@@ -12,7 +12,8 @@ if (!visible) return null; // Render nothing if not visible
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.getElementById("modal-root")
   );
 };
 

@@ -1,21 +1,111 @@
-import React, { useEffect } from "react";
+import  {useState, useEffect } from "react";
 import { FiAlignJustify } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import { RiMoonFill, RiSunFill } from "react-icons/ri";
 import { useLogoutUserMutation } from "../../services/authApi";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../../store/authSlice";
 import {toast} from "react-toastify"
 import Notify from "../../layouts/toast/Notify";
+import Dropdown from "../dropdown";
+import { BsArrowBarUp } from "react-icons/bs"; 
+import { IoMdNotificationsOutline } from "react-icons/io";
+import { useSocket } from "../../context/socketContext.js";
+import { apiSlice } from "../../services/apiSlice.js";
+
 
 const Navbar = (props) => {
   const { onOpenSidenav, brandText } = props;
-  const [darkmode, setDarkmode] = React.useState(false);
+  const [darkmode, setDarkmode] = useState(false);
   const dispatch = useDispatch()
   const [logout, {isError, isLoading, isSuccess, error}] = useLogoutUserMutation() 
   const navigate = useNavigate()
 
-  
+  const adminSocket = useSocket()
+  console.log(adminSocket)
+
+  //socket
+    const [notifications, setNotifications] = useState([          
+          {requestedBy: "aasis",
+          message: "Requested for service",
+          time: "justnow"}]);
+
+    console.log("notification", notifications)
+
+    const removeAllfn = () =>{
+      setNotifications([])
+    }
+      
+    // useEffect(() => {
+        // 1. Connect to socket
+        // socketService.connect(token);
+
+        // 2. Listen for new service requests
+        // socketService.on('new-service-request', (data) => {
+        //     console.log('📢 New request received:', data);
+            
+            // Add to requests list
+            // setRequests(prev => [data.service, ...prev]);
+            
+            // Show notification
+            // setNotifications(prev => [...prev, {
+            //     id: Date.now(),
+            //     message: data.message,
+            //     time: new Date()
+            // }])
+            
+            // Optional: Play sound
+            // new Audio('/notification.mp3').play();
+        // })
+
+        // 3. Listen for processed requests
+        // socketService.on('request-processed', (data) => {
+        //     console.log('✅ Request processed:', data);
+        //     // Update the request status in your list
+        //     setRequests(prev => prev.map(req => 
+        //         req.userId?._id === data.userId 
+        //             ? { ...req, status: data.status }
+        //             : req
+        //     ));
+        // });
+
+        // 4. Fetch existing pending requests from API
+        // fetchPendingRequests();
+
+        // Cleanup on unmount
+    //     return () => {
+    //         socketService.off('new-service-request');
+    //         socketService.off('request-processed');
+    //         socketService.disconnect();
+    //     };
+    // }, [token]);
+
+  useEffect(() => {
+
+    if(!adminSocket){
+      return
+    }
+
+    const onServiceRequest = (data) => {
+      console.log('📢 New request received:', data);
+
+          // Show notification
+      setNotifications(prev => [...prev, {
+          requestedBy: data.requestedBy,
+          message: data.message,
+          time: data.requestedAt,
+      }])
+
+      dispatch(apiSlice.util.invalidateTags(["Service"]))
+    }
+    
+    adminSocket.on("new-service-request", onServiceRequest)
+
+    return () => {
+      adminSocket.off("new-service-request", onServiceRequest)
+    }
+  },[adminSocket])
+
 
   useEffect(()=>{
     isSuccess && (navigate("/"), dispatch(logoutUser())) 
@@ -72,7 +162,7 @@ const Navbar = (props) => {
           <FiAlignJustify className="h-5 w-5" />
         </span>
         {/* start Notification */}
-        {/* <Dropdown
+        <Dropdown
           button={
             <p className="cursor-pointer">
               <IoMdNotificationsOutline className="h-24 w-7 text-gray-600 dark:text-white" />
@@ -85,29 +175,31 @@ const Navbar = (props) => {
                 <p className="text-base font-bold text-navy-700 dark:text-white">
                   Notification
                 </p>
-                <p className="text-sm font-bold text-navy-700 dark:text-white">
-                  Mark all read
+                <p onClick ={removeAllfn} className="text-sm font-bold text-navy-700 hover:text-base cursor-pointer dark:text-white">
+                  Remove all
                 </p>
-              </div> */}
+              </div>
 
-
-              {/* <button className="flex w-full items-center">
-                <div className="flex h-full w-[85px] items-center justify-center rounded-xl bg-gradient-to-b from-brandLinear to-brand-500 py-4 text-2xl text-white">
-                  <BsArrowBarUp />
+            {notifications.map((request) =>{
+              return(
+                  <button key={request.time} className="flex w-full items-center">
+                <div className="flex h-full w-[30px] items-center justify-center rounded-xl">
+                  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQldzdhnib7lRZQrvrQeGOkEycxk4l6vzMbadiqM5iTIw&s" />
                 </div>
                 <div className="ml-2 flex h-full w-full flex-col justify-center rounded-lg px-1 text-sm">
                   <p className="mb-1 text-left text-base font-bold text-gray-900 dark:text-white">
-                    New Update: Horizon UI Dashboard PRO
+                    {request.requestedBy} has requested for service.
                   </p>
-                  <p className="font-base text-left text-xs text-gray-900 dark:text-white">
-                    A new update for your downloaded item is available!
-                  </p>
+
                 </div>
               </button>
+              )
+            })}
+
             </div>
           }
           classNames={"py-2 top-4 -left-[230px] md:-left-[440px] w-max"}
-        /> */}
+        />
         {/* start Horizon PRO */}
         {/* <Dropdown
           button={

@@ -47,9 +47,12 @@ const userSchema = new mongoose.Schema(
         },
         role : {
             type : String,
-            enum : ["user", "admin", "guide", "serviceOwner", "productOwner"],
-            default : "user"
+            enum : ["user", "admin", "guide", "serviceOwner", "productOwner"]
         },
+        accessToken : {
+            type : String
+        },
+
         refreshToken : {
             type : String
         },
@@ -60,6 +63,13 @@ const userSchema = new mongoose.Schema(
         }
     },{ timestamps : true }
 )
+//using this middleware instead of default to user in role is better and this helps from auto changes in role in db
+userSchema.pre('save', function(next) {
+    if (!this.role) {
+        this.role = 'user';
+    }
+    next();
+});
 
 // this middleware  hash password before saving it to Db
 userSchema.pre("save", async function(next) {
@@ -69,6 +79,7 @@ userSchema.pre("save", async function(next) {
 })
 //It checks the password given by the client against the password present in the database and returns a boolean.
 userSchema.methods.verifyPassword = async function (password){
+    console.log(this.password)
     return  await bcrypt.compare(password, this.password)
 }
 // this method generates token 

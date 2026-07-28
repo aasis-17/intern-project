@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router'
 import serviceOwnerService from '../../services/serviceOwnerServices'
 import Loader from '../../components/loader/Loader'
-import Review from "../../components/Review.jsx"
+import Review from "../../components/ReviewComponent/Review.jsx"
 import Error from '../Error.jsx'
-import ReviewStar from '../../components/ReviewStar.jsx'
+import ReviewStar from '../../components/ReviewComponent/ReviewStar.jsx'
 
 const ServiceProfile = () => {
 
@@ -22,8 +22,6 @@ const ServiceProfile = () => {
     reviews,
     serviceImages,
     serviceInfo } =  serviceDetails || {}
-
-    console.log(reviews)
 
   if(isLoading) return <Loader />
   if(isError) return <Error />

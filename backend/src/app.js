@@ -10,7 +10,8 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({extended : true})) //true means qs which parses nested object in query false means querystring which false to parse nested object in query
 app.use(cors({
-    origin : process.env.CORS_ORIGIN,
+    // origin : process.env.CORS_ORIGIN,
+    origin :["http://localhost:5173","http://localhost:5174"],
     credentials : true
 }))
 app.use(cookieParser())

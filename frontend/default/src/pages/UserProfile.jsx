@@ -1,10 +1,10 @@
 import { useContext, useState, useRef, useEffect } from "react";
-import { AuthContext } from "../store/authContext";
+import { AuthContext, useAuth } from "../store/authContext";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
 import serviceOwnerService from "../services/serviceOwnerServices";
 import { useParams } from "react-router";
 import userService from "../services/userService";
-import Review from "../components/Review"
+import Review from "../components/ReviewComponent/Review"
 import { toast } from "react-toastify";
 import Notify from "../components/toast/Notify";
 import Button from "../components/Button";
@@ -14,7 +14,8 @@ import Error from "./Error";
 
 const UserProfile = () => {
 
-  const {state} = useContext(AuthContext)
+  // const {state} = useContext(AuthContext)
+  const {state} = useAuth()
 
   const {id} = useParams()
 

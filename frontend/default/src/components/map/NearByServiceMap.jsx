@@ -7,7 +7,7 @@ import { useParams } from 'react-router'
 const NearByServiceMap = ({mapDetails}) => {
     const {id} = useParams()
     const queryClient = useQueryClient()
-    const services = queryClient.getQueryData(["nearByServices", id])
+    const services = queryClient.getQueryData(["nearByServices", id]) 
 
         const map = useMap()
     
@@ -18,7 +18,7 @@ const NearByServiceMap = ({mapDetails}) => {
             <Marker icon={icon({iconSize:40, iconUrl : "/destination.webp"})} position={ latLng(mapDetails.serviceLocationMapCoordinates?.latitude || mapDetails.destinationMapCoordinates?.latitude, mapDetails.serviceLocationMapCoordinates?.longitude || mapDetails.destinationMapCoordinates?.longitude)}>
                 <Popup>{mapDetails.serviceName || mapDetails.destinationName}</Popup>
             </Marker>
-        {services.map((service) => (
+        {services.services.map((service) => (
                     <Marker icon={icon({iconSize: 40, iconUrl : service.serviceType === "Hotel" ? "/hotel.jpg" : "/restaurant.jpg"})} key={service._id} position={ latLng( service.serviceLocationMapCoordinates.latitude, service.serviceLocationMapCoordinates.longitude)}>
                         <Popup>{service.serviceName}</Popup>
                     </Marker>

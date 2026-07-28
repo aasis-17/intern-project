@@ -4,6 +4,8 @@ import { ServiceOwner } from "../model/role.model/serviceOwner.model.js";
 import { isValidObjectId } from "mongoose";
 import { User } from "../model/role.model/user.model.js";
 import mongoose from "mongoose";
+import { getIo } from "../socket/socket.js";
+
 
 
 export const upgradeToService = asyncHandler( async(req, res) => {
@@ -18,7 +20,10 @@ export const upgradeToService = asyncHandler( async(req, res) => {
 
     const uploadImage = await uploadFileOnCloudinary(localFilePath, "image",`serviceImage/${serviceName}`)
     
-    if(req.user.role === "admin"){
+
+
+    if(req.user.role === "admin")
+        {
         const serviceOwner = await ServiceOwner.create({
             serviceType,
             serviceName,
@@ -30,11 +35,12 @@ export const upgradeToService = asyncHandler( async(req, res) => {
             },
             serviceCoverImage : uploadImage.url,
             serviceCoverImagePublicId : uploadImage.public_id,
-            isApproved : "default"
+            status : "admin"
         })
 
         return res.status(201).json(new ApiResponse(200, serviceOwner, "Service created by admin successfully!!"))
     }else{
+
         const serviceOwner = await ServiceOwner.create({
             userId : req.user._id,
             serviceName,
@@ -47,7 +53,18 @@ export const upgradeToService = asyncHandler( async(req, res) => {
             serviceCoverImage : uploadImage.url,
             serviceCoverImagePublicId : uploadImage.public_id
         })
-        
+            const io = getIo()
+            console.log(io)
+
+        try {
+            io.of("/admin").to("admin-room").emit("new-service-request", {requestedBy : req.user.userName, requestedAt : new Date()})
+            console.log('socket send')
+            
+        } catch (socketError) {
+            console.error("Socket emission failed:", socketError);
+            // Don't fail the request, just log the error
+        }
+
         return res.status(200).json(new ApiResponse(200, {serviceOwner}, "Request send to admin!!"))
     }
 
@@ -59,27 +76,88 @@ export const approveServiceRequest = asyncHandler( async(req, res) => {
 
     if(!isValidObjectId(userId)) throw new ApiError(400, "Invalid userid!!")
 
-    const upgrade = await User.findByIdAndUpdate(userId,{
+    const {io} = getIo()
+
+    // Use a session for transaction to ensure data consistency
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+
+    const upgradeUser = await User.findByIdAndUpdate(userId,{
         $set : {
             role : "serviceOwner"
         }
     },{
-        new : true
+        new : true,
+        session
     })
 
-    if(!upgrade) throw new ApiError(500, "Server error!!")
-
-    const approved = await ServiceOwner.findOneAndUpdate({userId }, {
+    const approvedService = await ServiceOwner.findOneAndUpdate({userId }, {
         $set : {
-            isApproved : "approved"
+            status : "approved"
         }
     },{
-        new : true
+        new : true,
+        session
     })
+    
+    // Commit transaction
+    await session.commitTransaction();
 
-    if(!approved) throw new ApiError(500, "Server error!!")
+    try{
+        io.of("/user-namespace")
+        .to(`user : ${upgradeUser._id}`)
+        .emit("service-approved", approvedService)
 
-    return res.status(200).json(new ApiResponse(200, {}, `${upgrade.fullname} has been upgraded to service!!`))
+    } catch (socketError) {
+            console.error(`Failed to emit service-approved to user ${userId}:`, socketError);
+    }
+     return res.status(200).json(new ApiResponse(200, {}, `${upgradeUser.fullname} has been upgraded to service!!`))
+        
+    } catch (error) {
+        await session.abortTransaction();
+        throw error
+    }
+    finally{
+         session.endSession();
+    }
+   
+})
+
+
+export const rejectServiceRequest = asyncHandler(async(req, res) => {
+
+    const {serviceId} = req.params
+    console.log(serviceId, "serviceid")
+
+    const {io} = getIo()
+
+    if(!isValidObjectId(serviceId)) throw new ApiError(400, "Invalide service id!!")
+
+    const rejectedService = await ServiceOwner.findByIdAndUpdate(serviceId, {
+        $set : {
+            status : "rejected"
+        }
+        },{
+            new : true
+        })
+
+    // const serviceOwner = await ServiceOwner.findByIdAndDelete(serviceId)
+    
+    // if(!serviceOwner) throw new ApiError(500, "Server Error while removing service owner!!")
+
+    // await removeFileFromCloudinary(serviceOwner.serviceCoverImagePublicId, "image")
+
+try {
+    io.of("/user-namespace")
+    .to(`user : ${rejectedService.userId}`)
+    .emit("service-rejected", rejectedService)
+} catch (error) {
+    console.error(`Failed to emit`, error);
+}
+
+    return res.status(200).json(new ApiResponse(200, {}, "Service rejected!!"))
 })
 
 export const getAllServices = asyncHandler(async(req, res) => {
@@ -159,31 +237,9 @@ export const getAllServices = asyncHandler(async(req, res) => {
                 totalCount 
             }
 
-    return res.status(200).json(new ApiResponse(200, services, "Service requests fetched successfully!!"))
+    return res.status(200).json(new ApiResponse(200, {services, pagination}, "Service requests fetched successfully!!"))
 })
 
-export const rejectServiceRequest = asyncHandler(async(req, res) => {
-
-    const {serviceId} = req.params
-
-    if(!isValidObjectId(serviceId)) throw new ApiError(400, "Invalide service id!!")
-
-        const rejected = await ServiceOwner.findByIdAndUpdate({serviceId}, {
-            $set : {
-                isApproved : "rejected"
-            }
-        },{
-            new : true
-        })
-
-    // const serviceOwner = await ServiceOwner.findByIdAndDelete(serviceId)
-    
-    // if(!serviceOwner) throw new ApiError(500, "Server Error while removing service owner!!")
-
-    // await removeFileFromCloudinary(serviceOwner.serviceCoverImagePublicId, "image")
-
-    return res.status(200).json(new ApiResponse(200, {}, "Service rejected!!"))
-})
 
 export const updateServiceInfo = asyncHandler( async(req, res) => {
 

@@ -1,12 +1,20 @@
-
-import {  useNavigate } from 'react-router'
 import Button from '../components/Button'
+import { useNetwork } from '../store/networkContext'
 
-const Error = () => {
-  const navigate = useNavigate()
+const Error = ({mode}) => {
+ 
+  const {isOnline} = useNetwork()
+
+  
   const goBack = () =>{
   window.location.reload()
   }
+
+  const errorMsg = mode === "offline" ? "No internet connection! Please check your network and try again."
+  : "We can’t seem to find the page you are looking for!"
+
+  if(isOnline && mode === "offline") return null
+
   return (
     <>
      <div className="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden z-1">
@@ -19,7 +27,7 @@ const Error = () => {
           <img src='https://www.mexc.co/images/error/404-dark.svg' alt="404" className="dark:hidden" />
 
           <p className="mt-10 mb-6 text-base text-gray-700 dark:text-gray-400 sm:text-lg">
-            We can’t seem to find the page you are looking for!
+            {errorMsg}
           </p>
 
           <Button

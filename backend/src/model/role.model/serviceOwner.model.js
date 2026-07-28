@@ -54,11 +54,11 @@ const serviceOwnerSchema = new mongoose.Schema(
             ref : "Review"
         }],
 
-        isApproved : {
+        status : {
             type : String,
-            enum : ["pending", "approved", "rejected", "default"],
-            default : "pending"
-        }
+            enum : ["approved", "rejected", "pending", "admin"],
+            default : "pending"  
+        },
     },{timestamps : true}
 )
 

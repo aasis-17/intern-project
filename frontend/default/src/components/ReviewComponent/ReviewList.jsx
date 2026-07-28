@@ -1,5 +1,5 @@
-import ReviewStar from "./ReviewStar"
-import Button from "./Button"
+import ReviewStar from "../ReviewComponent/ReviewStar"
+import Button from "../Button"
 import { memo } from "react"
 
 const ReviewList = ({reviews, user, onDelete, isDeleting}) => {

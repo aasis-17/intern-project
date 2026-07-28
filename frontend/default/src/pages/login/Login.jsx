@@ -1,40 +1,16 @@
-import { useContext, useState } from 'react'
+import {  useState } from 'react'
 import { useForm } from 'react-hook-form'
-import authService from '../services/authServices'
-import { useNavigate, Link } from 'react-router'
-import FormField from '../components/form/FormField'
-import { AuthContext } from '../store/authContext.jsx'
-import { useMutation } from '@tanstack/react-query'
+import { Link } from 'react-router'
+import FormField from '../../components/form/FormField.jsx'
+import { useLogin } from './hooks/useLogin.js'
 
-const Login = ({onClose}) => {
+const Login = ({onClose, mode}) => {
 
-const {dispatch} = useContext(AuthContext) 
 const [visibility, setVisibility] =useState()
-const [handleError, setHandleError] = useState()
 const {register, handleSubmit} = useForm()
-const navigate = useNavigate()
 
-// const onSubmit = async (data) => {
-//     try {
-//         const userData = await authService.login(data.password, data.email)
-//         dispatch({type : "login", payload : userData})  
-//         onClose && onClose()
-//         navigate("/")     
-//     } catch (error) {
-//         setHandleError(error.message)
-//     }
-// }
+const {loginMutation} = useLogin({onClose, mode})
 
-const {mutate} = useMutation({
-  mutationFn : (data) => authService.login(data.password, data.email),
-  onSuccess : (data) => {
-    dispatch({type : "login", payload : data})
-    onClose && onClose()
-    navigate("/")
-  },
-  onError : (error) => setHandleError(error.message)
-
-})
 
   return (
     <div>
@@ -49,41 +25,39 @@ const {mutate} = useMutation({
             </p>
           </div>
 
-        <form className="mt-6 space-y-4" onSubmit={ handleSubmit(mutate)}>
-            <div>
+        <form className="mt-6 space-y-4" onSubmit={ handleSubmit(loginMutation.mutate)}>
+            
             <FormField 
             label = "Email"
             type = "email"
-            onClick = {() => setHandleError("")}
-            labelClassName="block text-m font-medium text-gray-700"
-            className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="w-full"
             placeholder = "Email or username"
+            labelClassName = "text-xs text-gray-600 mx-2"
             {...register("email", {
                 required : true
             })}
              />
-            </div>      
-            <div>
+                  
+            <div className='space-y-2'>
             <FormField 
             label = "Password"
             type={visibility ? "text" : "password"}
-            labelClassName="block text-m font-medium text-gray-700"
-            className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-            onClick = {() => setHandleError("")}
+            labelClassName = "text-xs text-gray-600 mx-2"
             placeholder = "password.."
             {...register("password", {
                 required : true
             })}
              />
+
             <FormField
             label = "Show Password"
             labelClassName = "text-xs text-gray-600 mx-2"
             type='checkbox'
+            className="flex"
             defaultChecked = {visibility}
             onClick={() => setVisibility(prev => !prev)}
              />            
              </div>
-             {handleError ? <p className='text-red-500 text-xs'>{handleError}</p> : ""}
 
              <div className="text-sm">
               <Link  className="font-medium text-blue-600 hover:text-blue-500">Forgot your password?</Link>

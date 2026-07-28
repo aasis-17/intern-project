@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
-import { useThrottel } from "../utiles/throttel";
+import { useThrottel } from "../hooks/throttel";
 import { useContext } from "react";
 import { AuthContext } from "../store/authContext";
 

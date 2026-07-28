@@ -1,4 +1,5 @@
 import axios from "axios"
+import { apiInstance } from "../axios/axios"
 class authServices {
 
     async signup (data) {
@@ -6,7 +7,8 @@ class authServices {
             console.log("data", data.email, data.password)
             const res = await axios.post("/api/v1/auth/signup", data)
             await this.login(data.password, data.email)
-            return res
+            console.log(res)
+            return res.data.data
         } catch (error) {
             throw error.response.data
         }
@@ -22,23 +24,23 @@ class authServices {
     }
     async logout(){
         try {
-            const res = await axios.get("/api/v1/auth")
+            const res = await apiInstance.get("/api/v1/auth")
             return res.data.data.userExists
         } catch (error) {
             throw error.response.data
         }
     }
-    async getCurrentUser (){
-        try {
-            const res = await  axios.get("/api/v1/auth")
-            return res.data.data
-        } catch (error) {
-            throw error.response.data
-        }
-    }
+    // async getCurrentUser (){
+    //     try {
+    //         const res = await  axios.get("/api/v1/auth")
+    //         return res.data.data
+    //     } catch (error) {
+    //         throw error.response.data
+    //     }
+    // }
     async updatePassword(formData){
         try {
-            const res = await axios.patch("/api/v1/auth", formData)
+            const res = await apiInstance.patch("/api/v1/auth", formData)
             return res.data.data
         } catch (error) {
             throw error.response.data.message

@@ -1,43 +1,31 @@
-import React, { useContext, useEffect, useState } from 'react'
+import { useEffect} from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { AuthContext } from '../store/authContext'
-import Modal from "./Modal"
-import Login from '../pages/Login'
+import {  useAuth } from '../store/authContext'
+
 
 function PageProtector({children, authentication = true}) {
-  
-    const navigate = useNavigate()
-    const {state, dispatch} = useContext(AuthContext)
-    console.log(state)
 
+    const {state, dispatch} = useAuth()
+    
     useEffect(() => {
         if(authentication && state.isAuthenticated !== authentication){
-            // setVisible(true) 
-            // navigate("login")
             dispatch({type : "setModal", payload : true})
         }
-        else if(!authentication && state.isAuthenticated !== authentication){
-        state.userData.role === "admin" && navigate("/admin",{ replace : true}) 
+        // else if(!authentication && state.isAuthenticated !== authentication){ 
         // : navigate("/",{ replace : true})  //it is same as history.forward()      
-        }
+        // }
         // else if(authentication && state.isAuthenticated === authentication && state.userData.role !== "admin"){
         //     navigate("/error")
         // }        
 
-    },[state.isAuthenticated, navigate,  authentication])
+    },[state.isAuthenticated, authentication])
+
+    if(authentication && state.isAuthenticated !== authentication){
+        return null
+    }
       
-    return(<>
-                {!state.isVisible && children}
-                <Modal 
-                    onClose={() =>{
-                    dispatch({type : "setModal", payload : false})
-                    navigate(-1)   // it is same as history.back() (for previous path)
-                    }}  
-                    visible={state.isVisible}>
-                    <Login onClose={()=> dispatch({type : "setModal", payload : false})}/>
-                    
-                </Modal>
-            </>)
+    return children
+
 }
 
 export default PageProtector

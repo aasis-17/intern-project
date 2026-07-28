@@ -1,14 +1,16 @@
-import { Link, NavLink, useLocation } from "react-router";
+import { useLocation } from "react-router";
 import { Outlet } from "react-router";
-import User from "./signup/User";
+// import User from "./signup/User";
 
 const SignupPage = () => {
-  const location = useLocation()
-  const path = location.pathname
+  // const location = useLocation()
+  // const path = location.pathname
   return (
     <div className="sm:flex ">
       <div  className="bg-amber-500 p-4 sm:w-1/3 sm:h-screen">
-        <div className="text-5xl font-garamond font-semibold mb-6">Welcome <br/>To trekers hub. {`${path === "/signup"?"" : ""}`}</div>
+        <div className="text-5xl font-garamond font-semibold mb-6">Welcome <br/>To trekers hub. 
+        {/* {`${path === "/signup"?"" : ""}`} */}
+        </div>
         <nav>
           {/* <ul className="flex justify-evenly">
             <li>

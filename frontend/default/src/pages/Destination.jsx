@@ -2,7 +2,7 @@ import {useState } from 'react'
 import DestinationCard from '../components/DestinationCard';
 import { useQuery} from "@tanstack/react-query"
 import destinationService from '../services/destinationService';
-import {useDebounceState } from '../utiles/debounce';
+import {useDebounceState } from '../hooks/debounce';
 import Loader from '../components/loader/Loader';
 
 // Main Destination Page Component
@@ -39,7 +39,7 @@ const Destination = () => {
     setFilter((prev) => ({...prev, [name] : value}))
   }
 
-  if(isError) return <div className='text-red-400 text-center'>{error.message}</div>
+  if(isError) return <Error />
   if(isLoading) return <><Loader color='dark' /></>
   
    return (

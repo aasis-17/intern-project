@@ -25,7 +25,7 @@ class userServices{
     }
     async updateUserInfo (formData){
         try {
-            const res = await axios.patch(this.uri, formData)
+            const res = await apiInstance.patch(this.uri, formData)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -34,7 +34,7 @@ class userServices{
 
     async updateUserAvatar (formData){
         try {
-            const res = await axios.put(this.uri,formData)
+            const res = await apiInstance.put(this.uri,formData)
             return res.data.data
         } catch (error) {
             throw error.response.data

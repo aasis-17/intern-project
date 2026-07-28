@@ -1,4 +1,5 @@
 import axios from "axios";
+import { apiInstance } from "../axios/axios";
 
 class serviceOwnerServices {
     constructor(
@@ -8,7 +9,7 @@ class serviceOwnerServices {
     }
     async getServiceProfile(serviceId){
         try {
-            const res = await axios.get(`/api/v1/serviceOwner/${serviceId}`)
+            const res = await apiInstance.get(`/api/v1/serviceOwner/${serviceId}`)
             console.log(res.data)
             return res.data.data
         } catch (error) {
@@ -18,7 +19,7 @@ class serviceOwnerServices {
 
     async getServiceProfileByUserId(userId){
         try {
-            const res = await axios.get(`${this.uri}/byUserId/${userId}`)
+            const res = await apiInstance.get(`${this.uri}/byUserId/${userId}`)
             console.log(res.data)
             return res.data.data
         } catch (error) {
@@ -28,7 +29,7 @@ class serviceOwnerServices {
 
     async upgradeToServiceOwner(formData){
         try {
-            const res = await axios.post(this.uri, formData)
+            const res = await apiInstance.post(this.uri, formData)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -38,7 +39,7 @@ class serviceOwnerServices {
     async getAllServices ({search="",option="", serviceDestination=""}){
     
         try {
-            const res = await axios.get(`${this.uri}?search=${search}&isApproved=${option}&serviceDestination=${serviceDestination}`)
+            const res = await apiInstance.get(`${this.uri}?search=${search}&isApproved=${option}&serviceDestination=${serviceDestination}`)
             console.log(res.data)
             return res.data.data
         } catch (error) {
@@ -48,7 +49,7 @@ class serviceOwnerServices {
 
     async approveServiceRequest (userId){
         try {
-            const res = await axios.post(`${this.uri}/approve/${userId}`)
+            const res = await apiInstance.post(`${this.uri}/approve/${userId}`)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -57,7 +58,7 @@ class serviceOwnerServices {
 
     async rejectServiceRequest (serviceId){
         try {
-            const res = await axios.delete(`${this.uri}/reject/${serviceId}`)
+            const res = await apiInstance.delete(`${this.uri}/reject/${serviceId}`)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -66,7 +67,7 @@ class serviceOwnerServices {
 
     async updateServiceInfo(formData, serviceId){ //if hamle formData without file pathako xa vani, tyo backend ma read hudaina so hamle yo case ma header pathauna parxa i.e application/json natar pardaina
         try {
-            const res = await axios({
+            const res = await apiInstance({
                 method : "patch",
                 url : `${this.uri}/${serviceId}`,
                 data : formData,
@@ -80,7 +81,7 @@ class serviceOwnerServices {
     }
     async addServiceImages(formData, serviceId){
         try {
-           const res = await axios.put(`${this.uri}/${serviceId}`, formData) 
+           const res = await apiInstance.put(`${this.uri}/${serviceId}`, formData) 
            return res.data.data
         } catch (error) {
             throw error.response.data
@@ -88,7 +89,7 @@ class serviceOwnerServices {
     }
     async deleteServiceImage(serviceId, formData){
         try {
-            const res= await axios.post(`${this.uri}/${serviceId}`, formData)
+            const res= await apiInstance.post(`${this.uri}/${serviceId}`, formData)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -96,7 +97,7 @@ class serviceOwnerServices {
     }
     async updateServiceCoverImage(serviceId, formData){
         try {
-            const res = await axios.put(`${this.uri}/update/${serviceId}`, formData)
+            const res = await apiInstance.put(`${this.uri}/update/${serviceId}`, formData)
             return res.data.data
         } catch (error) {
             throw error.response.data

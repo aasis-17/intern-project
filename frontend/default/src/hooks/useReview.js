@@ -12,7 +12,6 @@ export const useReview = ({reviewState, reviewId}) => {
         queryKey : ["reviews", reviewId],
         queryFn : () => reviewService.getReviews({reviewState, reviewId})
     })
-    console.log(data)
 
     const createReviewMutation = useMutation({
         mutationFn : (reviewForm) => reviewService.createReview({reviewForm, reviewState, reviewId}),

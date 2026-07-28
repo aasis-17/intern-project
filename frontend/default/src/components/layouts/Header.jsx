@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { AuthContext } from '../../store/authContext.jsx';
 import authService from '../../services/authServices.js';
-import { useThrottel } from '../../utiles/throttel.js';
+import { useThrottel } from '../../hooks/throttel.js';
 import Navigation from './Navigation.jsx';
 import Button from '../Button.jsx';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"

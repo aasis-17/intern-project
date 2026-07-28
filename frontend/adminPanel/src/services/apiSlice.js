@@ -31,6 +31,7 @@ const baseQueryWithReAuth = async(args, api, extraOption) => {
 
             result = await baseQuery(args, api, extraOption)
         }else{
+            console.log("loout user")
             api.dispatch(logoutUser())
         }
     }
@@ -396,12 +397,14 @@ export const apiSlice = createApi({
 
         rejectService : builder.mutation({
             query(serviceId){
+                console.log(serviceId)
                 return{
                     url : `serviceOwner/reject/${serviceId}`,
                     method : "DELETE"
                 }
             },
-            async onQueryStarted({ serviceId}, {dispatch, queryFulfilled}){
+            invalidatesTags : (result, error, {id}) => [{type : "Service", id}],
+            async onQueryStarted({serviceId}, {dispatch, queryFulfilled}){
                 try {
                     const {data} = await queryFulfilled
                     

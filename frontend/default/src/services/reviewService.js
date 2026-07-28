@@ -1,5 +1,6 @@
 import axios from "axios"
 import { data } from "react-router"
+import { apiInstance } from "../axios/axios"
 
 class reviewServices {
     constructor(uri){
@@ -9,7 +10,7 @@ class reviewServices {
     async createReview ({reviewForm, reviewState, reviewId}){
         console.log(reviewForm, reviewState, reviewId)
         try {
-            const res = await axios.post(`${this.uri}?${reviewState}=${reviewId}`, reviewForm)
+            const res = await apiInstance.post(`${this.uri}?${reviewState}=${reviewId}`, reviewForm)
             console.log(res)
             return res.data.data
         } catch (error) {
@@ -21,7 +22,7 @@ class reviewServices {
     async getReviews({reviewState, reviewId, limit=10, page=1}){
         console.log(reviewId, reviewState)
         try {
-            const res = await axios.get(`${this.uri}?${reviewState}=${reviewId}&limit=${limit}&page=${page}`)
+            const res = await apiInstance.get(`${this.uri}?${reviewState}=${reviewId}&limit=${limit}&page=${page}`)
             console.log(res)
             return res.data.data
         } catch (error) {
@@ -31,7 +32,7 @@ class reviewServices {
 
     async getReviewById (reviewId) {
         try {
-            const res = await axios.get(`${this.uri}/${reviewId}`)
+            const res = await apiInstance.get(`${this.uri}/${reviewId}`)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -40,7 +41,7 @@ class reviewServices {
 
     async updateReview (reviewId, formData) {
         try {
-            const res = await axios.patch(`${this.uri}/${reviewId}`, formData)
+            const res = await apiInstance.patch(`${this.uri}/${reviewId}`, formData)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -49,7 +50,7 @@ class reviewServices {
 
     async deleteReview (reviewId) {
         try {
-            const res = await axios.delete(`${this.uri}/${reviewId}`)
+            const res = await apiInstance.delete(`${this.uri}/${reviewId}`)
             return res.data.data
         } catch (error) {
             throw error.response.data

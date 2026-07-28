@@ -1,4 +1,4 @@
-import ImageSlider from '../../components/layouts/ImageSlider.jsx';
+import ImageSlider from './components/ImageSlider.jsx'
 import { useQuery } from '@tanstack/react-query';
 import destinationService from '../../services/destinationService.js';
 import { useNavigate } from 'react-router';

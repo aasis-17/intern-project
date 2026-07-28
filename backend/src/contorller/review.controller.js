@@ -108,11 +108,12 @@ export const deleteReview = asyncHandler(async(req, res) => {
 export const getReviews = asyncHandler( async(req, res) =>{
 
     const reviewObject = req.query
-    console.log(reviewObject)
+    console.log(reviewObject,"review")
     const {page=1, limit=10} = req.query
 
     const filter = Object.keys(reviewObject).includes("serviceId")? {serviceId : new mongoose.Types.ObjectId(reviewObject["serviceId"])} : {destinationId : new mongoose.Types.ObjectId(reviewObject["destinationId"])}
 
+    console.log(filter)
     const pageNo = parseInt(page)
     const limitNo = parseInt(limit)
 

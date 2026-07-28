@@ -1,5 +1,6 @@
 import { User } from "../model/role.model/user.model.js";
 import { ApiError, asyncHandler, ApiResponse } from "../utils/index.js";
+import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 
 const generateTokens = async (user) => {
@@ -7,6 +8,7 @@ const generateTokens = async (user) => {
     const accessToken = await user.generateAccessToken()
     const refreshToken = await user.generateRefreshToken()
 
+    user.accessToken = accessToken
     user.refreshToken = refreshToken
     await user.save({validateBeforeSave : false})
 
@@ -49,7 +51,7 @@ export const login = asyncHandler( async (req, res) => {
 
     if(!email || !password) throw new ApiError(400, "Email or password missing!!")
     
-    const user = await User.findOne({email})
+    const user = await User.findOne({email}).select("-refreshToken")
 
     if(!user) throw new ApiError(400, "User doesnot exists!!")
 
@@ -80,13 +82,13 @@ export const login = asyncHandler( async (req, res) => {
          //.cookie("accessToken", accessToken, options) 
          // if you want to handle access token from server side without client intervention using this it automatically set cookies in server side
         .cookie("refreshToken", refreshToken, options)
-        .json(new ApiResponse(200, { user, accessToken, refreshToken}, "Admin login Successfully!!")) 
+        .json(new ApiResponse(200, { user, accessToken}, "Admin login Successfully!!")) 
 
     }else{
     return res.status(200)
     .cookie("accessToken", accessToken, options) 
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, { user, accessToken, refreshToken}, "User login Successfully!!"))
+    .json(new ApiResponse(200, { user}, "User login Successfully!!"))
     }
 })
 
@@ -116,6 +118,7 @@ export const refreshAccessToken = asyncHandler(async(req, res) =>{
     
     const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken
 
+    console.log(incomingRefreshToken)
     if(!incomingRefreshToken){
         throw new ApiError(401, "unauthorized request!!")
     }
@@ -124,8 +127,10 @@ export const refreshAccessToken = asyncHandler(async(req, res) =>{
 
     const user = await User.findById(decodedToken._id)
 
+    console.log(user)
+
     if(!user){
-        throw ApiError(400, "Invalid refreshtoken!!")
+        throw new ApiError(400, "Invalid refreshtoken!!")
     }
     //console.log(user.refreshToken)
     console.log(incomingRefreshToken !== user.refreshToken)
@@ -172,4 +177,37 @@ export const updatePassword = asyncHandler(async(req, res) => {
 
     return res.status(200).json(new ApiResponse(200, {}, "Password updated successfully!!"))
 })
+
+export const initializeAdmin = async () => {
+    try {
+        // Check if any admin exists
+        const adminCount = await User.countDocuments({ role: 'admin' });
+        
+        if (adminCount === 0) {
+            console.log('No admin found. Creating default admin...');
+            
+            const defaultAdmin = {
+                fullname: 'Administrator',
+                username : "Admin123",
+                email: process.env.DEFAULT_ADMIN_EMAIL || "admin@gmail.com",
+                password: process.env.DEFAULT_ADMIN_PASSWORD||'admin123', 
+                role: 'admin'
+            };
+            
+            // Create admin
+            await User.create({
+                ...defaultAdmin
+            });
+            
+            console.log('✅ Default admin created successfully!');
+            console.log(`📧 Email: ${defaultAdmin.email}`);
+            console.log(`🔑 Password: ${defaultAdmin.password}`);
+            console.log('⚠️  Please change the password after first login!');
+        } else {
+            console.log(`✅ Admin already exists (${adminCount} admin(s))`);
+        }
+    } catch (error) {
+        console.error('❌ Error initializing admin:', error);
+    }
+};
 

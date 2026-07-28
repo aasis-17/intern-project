@@ -92,7 +92,7 @@ const ServiceOwner = ({option, details : serviceDetails, filterState}) => {
         isServiceUpdateError && toast.error(Notify,{data : {msg : serviceUpdateError?.data?.message||`service update eror!!` }, autoClose : 1000}) && serviceUpdateReset()
         isServiceUpgradeSuccess && toast.success(Notify,{data : {msg : `service upgrade successfully!!`}, autoClose : 1000}) && serviceUpgradeReset()
         isServiceUpdateSuccess && toast.success(Notify,{data : {msg : `service updated successfully!!`}, autoClose : 1000}) && serviceUpdateReset()
-        isServiceRemovedSuccess && toast.success(Notify,{data : {msg : `service deleted successfully!!`}, autoClose : 1000}) && serviceRemovedReset()
+        isServiceRemovedSuccess && toast.success(Notify,{data : {msg : `service deleted successfully!!`}, autoClose : 1000}) && navigate("admin/service") && serviceRemovedReset()
         isServiceRemovedError && toast.error(Notify, {data : {msg : serviceRemovedError?.data?.message||`service error while removing!!` }, autoClose : 1000}) && serviceRemovedReset()
       }
 

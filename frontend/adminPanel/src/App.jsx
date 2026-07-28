@@ -6,22 +6,25 @@ import AdminLayout from "./layouts/admin";
 // import AuthLayout from "./layouts/auth";
 import SignIn from "./views/auth/SignIn";
 import { useDispatch } from "react-redux";
-import { setUserData } from "./store/authSlice";
+import { setCredentials, setUserData } from "./store/authSlice";
 import { useGetCurrentUserQuery } from "./services/apiSlice";
 import Loader from "./layouts/loader/Loader";
+import { SocketProvider } from "./context/socketContext";
 const App = () => {
   
   const dispatch = useDispatch()
   const {data, isLoading, isError, isSuccess, error} = useGetCurrentUserQuery()
 
+  console.log(data)
+
   useEffect(()=>{
-    isSuccess && dispatch(setUserData(data?.data))
+    isSuccess && dispatch(setUserData(data?.data)) && dispatch(setCredentials(data?.data))
   },[isSuccess])
   
 
   if(isLoading)return <Loader />
   return (
-    <Routes>
+      <Routes>
       <Route path="/" element={<SignIn />} />
       {/* <Route path="auth/*" element={<AuthLayout />} /> */}
       <Route path="admin/*" element={<PageProtector><AdminLayout /></PageProtector>} />

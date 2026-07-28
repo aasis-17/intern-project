@@ -1,33 +1,34 @@
-import { useContext } from 'react'
 import { useState } from "react";
-import FormField from '../../components/form/FormField.jsx';
+import FormField from '../../../components/form/FormField.jsx';
 import { useForm } from "react-hook-form"
-import RouteLocate from '../../components/map/MapRouting.jsx';
+import RouteLocate from '../../../components/map/MapRouting.jsx';
 import { useMutation, useQuery, useQueryClient} from "@tanstack/react-query"
-import TextField from '../../components/form/TextField.jsx';
-import Map from '../../components/map/Map.jsx';
+import TextField from '../../../components/form/TextField.jsx';
+import Map from '../../../components/map/Map.jsx';
 import { useNavigate} from 'react-router';
 import { latLng } from 'leaflet';
-import Button from '../../components/Button.jsx';
-import destinationService from '../../services/destinationService.js';
-import serviceOwnerService from '../../services/serviceOwnerServices.js';
-import { AuthContext } from '../../store/authContext.jsx';
-import PhotoUpload from '../../components/layouts/admin/PhotoUpload.jsx';
+import Button from '../../../components/Button.jsx';
+import destinationService from '../../../services/destinationService.js';
+import serviceOwnerService from '../../../services/serviceOwnerServices.js';
+import { useAuth } from '../../../store/authContext.jsx';
+import PhotoUpload from '../../../components/layouts/admin/PhotoUpload.jsx';
 import { toast } from 'react-toastify';
-import Notify from '../../components/toast/Notify.jsx';
-import Loader from '../../components/loader/Loader.jsx';
+import Notify from '../../../components/toast/Notify.jsx';
+import Loader from '../../../components/loader/Loader.jsx';
+import { useServiceMutation } from "./hooks/useServiceMutation.js";
 
-const ServiceOwner = ({option }) => {
+const ServicePage = ({option, serviceDetails}) => {
     const [visible, setVisible] = useState(() => option !== "edit" )
     const [btnVisible, setBtnVisible] = useState(false)
     const [imagePreview, setImagePreview] = useState("")
 
-    const {state} = useContext(AuthContext)
+    const {state} = useAuth()
+    console.log(option)
 
-    const queryClient = useQueryClient()
-    const serviceDetails = queryClient.getQueryData(["serviceDetails", state.userData._id])
+    const isEditable = option === "edit"
 
-    const navigate = useNavigate()
+    // const queryClient = useQueryClient()
+    // const serviceDetails = queryClient.getQueryData(["serviceDetails", state?.userData?._id])
 
     const [mapState, setMapState] = useState({
         position : latLng( serviceDetails?.serviceLocationMapCoordinates.latitude, serviceDetails?.serviceLocationMapCoordinates.longitude) || "",
@@ -41,7 +42,6 @@ const ServiceOwner = ({option }) => {
         return  destinationService.getDestination()
       }
     })
-
 
     let locations = isSuccess ? data.destinations?.map(destination => {
       return {name : destination.destinationName,_id : destination._id, latLng : {lat : destination.destinationMapCoordinates.latitude, lng :destination.destinationMapCoordinates.longitude}}
@@ -68,73 +68,30 @@ const ServiceOwner = ({option }) => {
          province.name === e.target.value && setMapState(prev => ({...prev, province : province.latLng}))
       })
     }
-    const mutation = useMutation({
-      mutationFn :  async(data) => {
-        const formData = new FormData()
 
-        Object.keys(data).forEach((key) => {
-            if(key === "serviceCoverImage"){
-                formData.append(key, data[key][0])
-            }else{
-                formData.append(key, data[key])
-            }
-        })
-        formData.append("latitude",mapState.position.lat)
-        formData.append("longitude", mapState.position.lng)
-        formData.append("serviceDestination",mapState.region )
-        if(option === "edit"){
-          const data = await serviceOwnerService.updateServiceInfo( formData, serviceDetails._id)
-          return data
-        }else{
-          const data = await serviceOwnerService.upgradeToServiceOwner(formData)
-          return data
-        }    
-      },
-      onSuccess : (data) => {
-        
-        if(option === "edit"){
-          toast.success(Notify,{data : {msg :`Service info updated successfully!!`}, autoClose : 1000})
-          setVisible(false)
-        }else{
-          toast.success(Notify,{data : {msg : `Service request send successfully!!`}, autoClose : 1000}) 
-          navigate(-1)
-          reset()         
-        }
-        // queryClient.invalidateQueries({queryKey : ["serviceOwner"]})
-                queryClient.setQueryData(["serviceDetails", state.userData._id], (prev) =>{
-                    Object.assign(prev, data)
-                })
+    const {mutation} = useServiceMutation({mode : option="", mapState, setVisible, reset, state})
 
-              },
-
-      onError : (error) => {
-        if(option==="edit"){
-          toast.error(Notify, {data : {msg :error || "Error while  updating service info!!" }, autoClose : 1000})
-        }else{
-          toast.error(Notify, {data : {msg : error || "Error while  signing user as service !!"}, autoClose : 1000})
-        }
-
-      }
-    })
-  if(!serviceDetails || isLoading) return <Loader />
+  if( isLoading) return <Loader />
    return(
    <div className=' flex-1'>
     {btnVisible ? (<PhotoUpload id={state.userData._id} option="service" setBtnVisible={setBtnVisible} />) 
     : (
          <form onSubmit={ handleSubmit(mutation.mutateAsync) } className=" h-full  flex flex-col justify-evenly">
           <div className='flex justify-between'>
-                <div className='text-4xl font-garamond font-medium mb-3'>{option ==="edit" ? "Service Details" : "Details"}</div>
+                <div className='text-4xl font-garamond font-medium mb-3'>{isEditable ? "Service Details" : "Details"}</div>
               <div className='flex gap-5 p-2'>
-                {option === "edit" &&
+
+                {isEditable &&(
                 <Button 
                   onClick={() => setBtnVisible(prev => !prev) } 
-                  children={`${option === "edit" ? "Edit Photos" : "Add Photos" }`}
+                  children={`${isEditable ? "Edit Photos" : "Add Photos" }`}
                   size='sm'
                   className={`${visible ? "" : "hidden"}`}
                   variant='outline'
-                  />  }
+                  /> )}
+                  
 
-                  {option ==="edit" && (
+                  {isEditable && (
                           <Button
                           children={visible ? "Cancel" : "Edit"}
                           onClick={()=> setVisible(prev => !prev)}
@@ -162,27 +119,27 @@ const ServiceOwner = ({option }) => {
  
           <div className='flex gap-4 mt-5'>
 
-            {option !== "edit" && (
+            {/* {isEditable && ( */}
           <div className='w-1/2'>
 
           {/* Image preview */}
-          <div className=' h-60  rounded-3xl border-black border-2 overflow-hidden'>
+          <div className='mb-2 h-60  rounded-3xl border-black border-2 overflow-hidden'>
             <img className=' object-cover h-full w-full' src={imagePreview || serviceDetails && serviceDetails.serviceCoverImage || "https://www.contentviewspro.com/wp-content/uploads/2017/07/default_image.png"} alt='cover image' />
           </div>
 
-          {/* ServiceOwner cover image */}
-          <div className=''>
+          {/* ServicePage cover image */}
+          {/* <div className=''> */}
             <FormField
               label="Cover Image"
               type="file"
               onInput={(e) => handlePreview(e)}
-              className="w-full hidden"
-              labelClassName="block text-lg font-medium  text-center text-gray-600"
+              className="w-full hover:scale-110 transition-transform duration-200"
+              labelClassName="cursor-pointer text-center "
               {...register("serviceCoverImage", {required : true})}
             />
+          {/* </div> */}
           </div>
-          </div>
-            )}
+            {/* )} */}
 
           <div className= "w-full mb-5">
           {/* serviceName */}
@@ -285,7 +242,7 @@ const ServiceOwner = ({option }) => {
           loading={mutation.isPending}
           type="submit"
           className='w-full my-3'
-         children= {`${option === "edit" && "Save" || option ==="admin" && "Add service" || "Create Page as Service " }`}
+         children= {`${isEditable && "Save" || option ==="admin" && "Add service" || "Create Page as Service " }`}
         />
           
           )}
@@ -298,4 +255,4 @@ const ServiceOwner = ({option }) => {
     )
 }
 
-export default ServiceOwner
+export default ServicePage

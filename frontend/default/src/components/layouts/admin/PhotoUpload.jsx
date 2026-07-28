@@ -112,7 +112,7 @@ const PhotoUpload = ({option, id, setBtnVisible}) => {
                     /> 
 
                     <div className='flex justify-between'>
-                        <Button children="back" variant='secondary' onClick={() =>  {
+                        <Button children="back" variant='outline' onClick={() =>  {
                             setImagePreview(prev => prev <= 0 ? 0 : prev - 1)
                             }} />
                         <div className=''>

@@ -1,3 +1,4 @@
+import { memo } from "react"
 
 const ReviewStar = ({avgReview = 0, className=""}) => {
     const averageReview = Number(avgReview?.toFixed()) || 0
@@ -13,4 +14,4 @@ const ReviewStar = ({avgReview = 0, className=""}) => {
   )
 }
 
-export default ReviewStar
+export default memo(ReviewStar)

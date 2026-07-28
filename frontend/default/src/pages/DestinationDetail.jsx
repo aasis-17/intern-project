@@ -3,7 +3,7 @@ import Loader from '../components/loader/Loader';
 import { Outlet, useParams } from 'react-router';
 import destinationService from '../services/destinationService';
 import serviceOwnerService from '../services/serviceOwnerServices';
-import Review from "../components/Review"
+import Review from "../components/ReviewComponent/Review"
 import RouteGallery from "../components/layouts/destination/RouteGallery"
 import Error from './Error';
 const DestinationDetailPage = () => {

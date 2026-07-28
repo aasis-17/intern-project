@@ -8,7 +8,7 @@ class destinationServices{
 
     async getAllDestinationName(){
         try {
-            const res = await axios.patch(`${this.uri}`)
+            const res = await apiInstance.patch(`${this.uri}`)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -29,7 +29,7 @@ class destinationServices{
 
     async getDestinationById (_id) {
         try {
-            const res = await axios.get(`${this.uri}/${_id}`)
+            const res = await apiInstance.get(`${this.uri}/${_id}`)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -40,7 +40,7 @@ class destinationServices{
         
         try {
             console.log(formData)
-            const res = await axios.post(this.uri, formData)
+            const res = await apiInstance.post(this.uri, formData)
             
             console.log(res)
             return res.data.data
@@ -50,7 +50,7 @@ class destinationServices{
     }
     async deleteDestination (_id){
         try {
-            const res = await axios.delete(`${this.uri}/${_id}`)
+            const res = await apiInstance.delete(`${this.uri}/${_id}`)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -58,7 +58,7 @@ class destinationServices{
     }
     async updateDestination(formData){
         try {
-            const res =await axios.patch(this.uri, formData)
+            const res =await apiInstance.patch(this.uri, formData)
             return res.data.data
         } catch (error) {
             throw error.response.data
@@ -68,7 +68,7 @@ class destinationServices{
     async addRoutePlan ( destinationId, formData){
 
         try {
-            const res = await axios.post(`${this.uri}/route/${destinationId}`, formData)
+            const res = await apiInstance.post(`${this.uri}/route/${destinationId}`, formData)
             console.log(res.data.data)
             return res.data.data
         } catch (error) {
@@ -78,7 +78,7 @@ class destinationServices{
 
     async addDestinationImages(formData, _id){
         try {
-            const res = await axios.put(`${this.uri}/${_id}`, formData)
+            const res = await apiInstance.put(`${this.uri}/${_id}`, formData)
             console.log(res)
             return res.data.data
         } catch (error) {
@@ -89,7 +89,7 @@ class destinationServices{
     async deleteDestinationImage(formData, _id){
         console.log(formData)
         try {
-            const res = await axios.post(`${this.uri}/${_id}`, formData)
+            const res = await apiInstance.post(`${this.uri}/${_id}`, formData)
             console.log(res)
             return res.data.data
         } catch (error) {

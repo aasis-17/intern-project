@@ -1,5 +1,5 @@
 import {useState, useCallback} from 'react'
-import { useDebounce } from '../../../utiles/debounce'
+import { useDebounceState } from '../../../utiles/debounce'
 import Button from '../../../components/button/Button'
 import FormField from '../../../components/fields/FormField'
 import { useNavigate } from 'react-router'
@@ -16,18 +16,23 @@ const AdminServices = () => {
         option : "",
         serviceDestination : ""
     })
-      const {data : services, isLoading, isError, error} = useGetServicesQuery(filter)
 
-      const {data} = useGetAllDestinationNameQuery()
+      const debounceQuery = useDebounceState(filter, 400)
 
-      const destinations = data?.data
+      const {data, isLoading, isError, error} = useGetServicesQuery(debounceQuery)
 
-    const handleSearch = (e) =>{
+      const services = data?.services
+
+      const {data :destinationData} = useGetAllDestinationNameQuery()
+
+      const destinations = destinationData?.data
+
+    const handleSearch =  useCallback((e) => {
         const {name, value} = e.target
         setFilter(prev => ({...prev, [name] : value}))
-      }
+      },[])
 
-    const debounceQuery = useDebounce(handleSearch, 400)
+
   return (
     <div className="p-8 flex-1">
      
@@ -43,14 +48,14 @@ const AdminServices = () => {
 <FormField
   name="search"
   placeholder="Search service..."
-  onChange={(e) => debounceQuery(e)}
+  onChange={handleSearch}
   className="p-2 border border-gray-300 rounded-lg flex-grow"
 />
 
 {/* Region Select Dropdown */}
 <select
   name="serviceDestination"
-  onChange={(e) => debounceQuery(e)}
+  onChange={handleSearch}
   className="p-2 border border-gray-300 rounded-lg"
 >
     <option key="all" value="">
@@ -65,7 +70,7 @@ const AdminServices = () => {
 
 <select
   name="option"
-  onChange={(e) => debounceQuery(e)}
+  onChange={handleSearch}
   className="p-2 border border-gray-300 rounded-lg"
 >
     <option value="">Select status</option>
@@ -104,7 +109,7 @@ const AdminServices = () => {
           </div>
 
           </div>
-          <span className='text-sm '>Status : {service.isApproved === "approved" ? <MdCheckCircle className="text-green-500 me-1 dark:text-green-300 inline" /> : <MdOutlineError className="text-amber-500 me-1 dark:text-amber-300 inline" />}<span >{service.isApproved.toUpperCase()}</span> </span>
+          <span className='text-sm '>Status : {service.status === "approved" ? <MdCheckCircle className="text-green-500 me-1 dark:text-green-300 inline" /> : <MdOutlineError className="text-amber-500 me-1 dark:text-amber-300 inline" />}<span >{service.status.toUpperCase()}</span> </span>
           <div className='mr-5 '>
             <Button 
               onClick={() =>{

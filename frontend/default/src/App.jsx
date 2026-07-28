@@ -1,12 +1,13 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import { lazy, memo, Suspense, useState, useContext } from 'react';
-import { AuthContext } from './store/authContext.jsx';
-import { useQuery } from '@tanstack/react-query';
+import { Routes, Route } from 'react-router-dom';
+import { lazy, memo, Suspense } from 'react';
 import Container from  './components/Container.jsx';
-import userService from './services/userService.js';
 import RouteIndex from './components/layouts/destination/RouteIndex.jsx';
 import RoutePlan from './components/layouts/destination/RoutePlan.jsx';
 import Skeleton from './components/skeleton/skeleton.jsx';
+import Modal from './components/Modal.jsx';
+import Login from './pages/login/Login.jsx';
+import { useCurrentUser } from './hooks/useCurrentUser.js';
+import { useNetwork } from './store/networkContext.jsx';
 
 const Error = lazy(() => import ('./pages/Error.jsx'));
 
@@ -14,52 +15,28 @@ const Layout = lazy(() => import ('./components/Layout.jsx'));
 const PageProtector = lazy(() => import ('./components/AuthLayout.jsx'));
 
 const Home = lazy(() => import ('./pages/home/Home.jsx'));
-const SignupPage = lazy(() => import ('./pages/Signup.jsx'));
+const SignupPage = lazy(() => import ('./pages/signup/Signup.jsx'));
 const Header = lazy(() => import ('./components/layouts/Header.jsx')) 
-const User = lazy(() => import ('./pages/signup/User.jsx'));
-const Login = lazy(() => import ('./pages/Login.jsx'));
+const User = lazy(() => import ('./pages/signup/UserPage/User.jsx'));
 const Destination = lazy(() => import ('./pages/Destination.jsx'));
 const ServiceProfile = lazy(() => import ('./pages/serviceProfile/serviceProfile.jsx'));
 const DestinationDetailPage = lazy(() => import ('./pages/DestinationDetail.jsx'));
 const UserProfile = lazy(() => import ('./pages/UserProfile.jsx'));
-const ServiceOwner = lazy(() => import ('./pages/signup/Service.jsx'));
-const Settings = lazy(() => import ('./pages/Settings.jsx'));
+const ServicePage = lazy(() => import ('./pages/signup/servicePage/ServicePage.jsx'));
+const Settings = lazy(() => import ('./pages/settings/Settings.jsx'));
 const Services = lazy(() => import ('./pages/services/Services.jsx'));
 
 function App() {
 
-  const {dispatch} = useContext(AuthContext)
-  const navigate = useNavigate()
-  const [currentUserState, setCurrentUserState] = useState(false)
-
   const MemoHeader = memo(Header)
 
-  const {isLoading} = useQuery({
-    queryKey : ["current user"],
-    queryFn : 
-    async() => {
-      try {
-        const data = await userService.getCurrentUser()
-        console.log(data, "datata")
-        dispatch({type : "login", payload : data})
-        return data
-      } catch (error) {
-        console.log(error)
-        if (error.data.message === "jwt expired" || error.status === 401) {
-           dispatch({type : "logout"})
-        }else setCurrentUserState(true)
-         
-        navigate("/")
-        console.log("eeee")
-                
-        return error
-        }
-    }
-  })
+  const {isOnline} = useNetwork()
+  
+  const {isLoading, isError, state, dispatch} = useCurrentUser()
 
+  if(isError) return <Error /> 
 
-
-  if(currentUserState) return <Error /> 
+  if(!isOnline) return <Error mode="offline"/>
  
   if(isLoading) return <Skeleton />
   return (
@@ -73,7 +50,7 @@ function App() {
           <Route path="/destination" element={<Destination />} />
           <Route path="/:id" element={<PageProtector children={<UserProfile />}/>} />
           <Route path='settings' element={<Settings />} />
-          <Route path='profile/:id' element={<PageProtector children={<ServiceProfile />}/>} />
+          <Route path='profile/:id' element={<PageProtector children={<ServiceProfile />} />} />
           <Route path='services' element={<Services />} />
 
           {/* Destination detailed page */}
@@ -88,15 +65,24 @@ function App() {
         <Route path='/error' element={<Error />} />
          <Route path="/signup" element={<PageProtector authentication={false} children={<SignupPage />}/> } >
          <Route index element={<PageProtector authentication={false} children={<User />} />}  />
-         <Route path='service' element={<ServiceOwner />} />
+         <Route path='service' element={<ServicePage />} />
          <Route  path='login' element={<Login />} />
           </Route>
       </Routes>
-        </Suspense>
+       
+</Suspense>
+
+        <Modal 
+            onClose={() =>{
+            dispatch({type : "setModal", payload : false})
+            }}  
+            visible={state.isModelVisible}>
+            <Login mode='modal' onClose={()=> dispatch({type : "setModal", payload : false})}/>
+            
+        </Modal>
+         
     </Container>
   
-
-
   )
 }
 

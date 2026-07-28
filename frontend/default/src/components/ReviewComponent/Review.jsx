@@ -1,8 +1,8 @@
-import { useCallback, useContext, useState } from "react";
-import { AuthContext } from "../store/authContext.jsx";
-import Button from "./Button.jsx";
-import { useReview } from "../utiles/useReview.js";
-import ReviewList from "./ReviewList.jsx";
+import { useCallback, useState } from "react";
+import Button from "../Button.jsx";
+import { useReview } from "../../hooks/useReview.js";
+import ReviewList from "../../components/ReviewComponent/ReviewList.jsx"
+import { useAuthAction } from "../../hooks/useAuthAction.js";
 
 const ReviewComponent = ({reviewState, reviewId}) => {
 
@@ -12,18 +12,14 @@ const ReviewComponent = ({reviewState, reviewId}) => {
     comment : ""
   });
 
-  const {state, dispatch} = useContext(AuthContext)
-
   const {reviews,
       createReviewMutation,
       deleteReviewMutation} = useReview({reviewState, reviewId})
 
+  const {runIfAuthenticated, userData} = useAuthAction()
+
   const handleReviewSubmit = () => {
-      if(!state.isAuthenticated) {
-        dispatch({type : "setModal", payload : true})
-        return 
-      } 
-      createReviewMutation.mutate(review)
+      runIfAuthenticated(() => createReviewMutation.mutate(review) )   
   }
 
   const handleReviewDelete = useCallback((id) =>{
@@ -52,7 +48,7 @@ const ReviewComponent = ({reviewState, reviewId}) => {
 
        <ReviewList
         reviews = {reviews}
-        user={state.userData}
+        user={userData}
         onDelete={handleReviewDelete}
         isDeleting={deleteReviewMutation.isPending}
         />

@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import ReviewStar from '../../../components/ReviewStar'
+import ReviewStar from '../../../components/ReviewComponent/ReviewStar'
 
 const DestinationPreviewCard = ({destination, className, onClick}) => {
   return (
